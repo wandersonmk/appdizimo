@@ -40,16 +40,16 @@
           </div>
           <div class="bg-gradient-to-r from-blue-50/10 to-purple-50/10 border border-blue-200/20 rounded-2xl rounded-tl-md p-4 max-w-md">
             <p class="text-foreground/90 text-sm leading-relaxed">
-              Olá! 👋 Sou seu assistente financeiro inteligente. Posso te ajudar com:
+              Olá! 👋 Sou seu assistente financeiro especializado. Foco APENAS em finanças:
             </p>
             <ul class="mt-2 space-y-1 text-xs text-foreground/70">
-              <li>• Análise de gastos e receitas</li>
-              <li>• Planejamento financeiro</li>
-              <li>• Orientações sobre dízimo</li>
-              <li>• Dicas de economia</li>
+              <li>💰 Cálculos de dízimo e orçamento</li>
+              <li>📊 Controle de gastos e receitas</li>
+              <li>💸 Dicas de economia e poupança</li>
+              <li>📈 Planejamento e investimentos</li>
             </ul>
             <p class="mt-2 text-foreground/90 text-sm">
-              Como posso te ajudar hoje?
+              Que questão financeira posso te ajudar? 💼
             </p>
           </div>
         </div>
@@ -168,12 +168,12 @@ let messageIdCounter = 1
 
 // Sugestões rápidas
 const suggestions = ref([
-  '💰 Como organizar minhas finanças?',
-  '📊 Analisar meus gastos',
-  '💒 Cálculo do dízimo',
-  '💡 Dicas de economia',
-  '📈 Planejamento financeiro',
-  '🎯 Definir metas financeiras'
+  '💰 Como calcular 10% de dízimo?',
+  '📊 Análise dos meus gastos mensais',
+  '� Dicas para economizar dinheiro',
+  '🏦 Como fazer um orçamento familiar?',
+  '📈 Investimentos para iniciantes',
+  '💳 Controle de gastos com cartão'
 ])
 
 // Função para selecionar sugestão

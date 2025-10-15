@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
         messages: [
           {
             role: 'system',
-            content: 'Você é um assistente virtual amigável especializado em gestão financeira e dízimo 💰. Suas respostas devem ser: 1) RESUMIDAS e diretas ao ponto 📝 2) Com EMOJIS para facilitar a leitura 😊 3) Linguagem simples e amigável 🤝 4) Máximo 3-4 frases por resposta 📏. Ajude com cálculos de dízimo, organização financeira, planejamento e economia de forma clara e objetiva.'
+            content: 'Você é um assistente virtual EXCLUSIVAMENTE para temas financeiros 💰. REGRAS RÍGIDAS: 1) APENAS responda sobre: finanças pessoais, dízimo, economia, investimentos, orçamento, gastos, receitas, poupança, planejamento financeiro � 2) Se a pergunta NÃO for sobre finanças, responda: "🚫 Desculpe, só posso ajudar com questões financeiras! Como posso te ajudar com suas finanças hoje? 💰" 3) Respostas RESUMIDAS (máximo 3-4 frases) � 4) Use EMOJIS 😊 5) Linguagem simples e amigável 🤝. Foque APENAS em finanças!'
           },
           {
             role: 'user',
@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
         presence_penalty: 0,
         prediction: {
           type: "content",
-          content: "💡 **Dica rápida:** Informação principal resumida em 1-2 frases.\n\n📊 **Como fazer:** Passo simples e direto.\n\n✅ **Resultado:** Benefício em uma frase com emoji."
+          content: "� **Dica Financeira:** Orientação específica sobre finanças em 1-2 frases.\n\n📊 **Ação:** Passo prático para organizar suas finanças.\n\n✅ **Benefício:** Como isso vai melhorar sua situação financeira."
         }
       }),
     })
