@@ -154,28 +154,55 @@ export function useFinancas() {
       
       if (entradaError) throw entradaError
       
-      // Buscar ou criar categoria de dízimo
+      // Buscar categoria de dízimo existente ou usar a padrão
       let categoriaDizimo = categorias.value.find(c => c.tipo === 'dizimo')
+      
+      // Se não encontrou na lista local, buscar no banco
       if (!categoriaDizimo) {
-        const { data: novaCat, error: catError } = await supabase
+        const { data: catDizimo, error: searchError } = await supabase
           .from('categorias_financeiras')
-          .insert([{
-            nome: 'Dízimo',
-            tipo: 'dizimo',
-            cor: '#10B981',
-            icone: 'church'
-          }])
           .select('*')
+          .eq('tipo', 'dizimo')
+          .limit(1)
+          .single()
         
-        if (catError) throw catError
-        if (novaCat && novaCat[0]) {
-          categoriaDizimo = novaCat[0]
+        if (searchError && searchError.code !== 'PGRST116') {
+          // Se houve erro que não seja "não encontrado"
+          throw searchError
+        }
+        
+        if (catDizimo) {
+          categoriaDizimo = catDizimo
           categorias.value.push(categoriaDizimo)
+        } else {
+          // Criar categoria de dízimo se não existir
+          const { data: novaCat, error: catError } = await supabase
+            .from('categorias_financeiras')
+            .insert([{
+              nome: 'Dízimo',
+              tipo: 'dizimo',
+              cor: '#10B981',
+              icone: 'church'
+            }])
+            .select('*')
+            .single()
+          
+          if (catError) throw catError
+          if (novaCat) {
+            categoriaDizimo = novaCat
+            categorias.value.push(categoriaDizimo)
+          }
         }
       }
       
       // Inserir o dízimo automaticamente
-      if (categoriaDizimo) {
+      if (categoriaDizimo && valorDizimo > 0) {
+        console.log('💰 Criando dízimo automático:', {
+          valor: valorDizimo,
+          categoria: categoriaDizimo.nome,
+          entrada: transacao.descricao
+        })
+        
         const { data: dizimoData, error: dizimoError } = await supabase
           .from('transacoes_financeiras')
           .insert([{
@@ -192,7 +219,12 @@ export function useFinancas() {
             categoria:categorias_financeiras(nome, cor, icone)
           `)
         
-        if (dizimoError) throw dizimoError
+        if (dizimoError) {
+          console.error('❌ Erro ao criar dízimo:', dizimoError)
+          throw dizimoError
+        }
+        
+        console.log('✅ Dízimo criado com sucesso!', dizimoData)
         
         // Adicionar ambas transações à lista
         if (entradaData && entradaData[0]) {
@@ -200,6 +232,16 @@ export function useFinancas() {
         }
         if (dizimoData && dizimoData[0]) {
           transacoes.value.unshift(dizimoData[0])
+        }
+      } else {
+        console.warn('⚠️ Dízimo não foi criado:', { 
+          categoriaDizimo: !!categoriaDizimo, 
+          valorDizimo 
+        })
+        
+        // Adicionar apenas a entrada se não há dízimo
+        if (entradaData && entradaData[0]) {
+          transacoes.value.unshift(entradaData[0])
         }
       }
       
