@@ -313,7 +313,7 @@ onMounted(async () => {
               {{ formatCurrency(resumoFinanceiro.saldoAtual) }}
             </p>
             <p class="text-xs mt-1" :class="resumoFinanceiro.saldoAtual >= 0 ? 'text-indigo-600' : 'text-red-600'">
-              {{ resumoFinanceiro.saldoAtual >= 0 ? '💎 Receitas líq. - Despesas' : '⚠️ Mais despesas que receitas' }}
+              {{ resumoFinanceiro.saldoAtual >= 0 ? '💎 Receitas líq. - Despesas pagas' : '⚠️ Despesas pagas excedem receitas' }}
             </p>
           </div>
           <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">

@@ -24,8 +24,14 @@ export function useFinancas() {
       .filter(t => t.tipo === 'entrada')
       .reduce((sum, t) => sum + (t.valor * 0.9), 0) // 90% do valor original
     
+    // Total de todas as saídas (para exibição nos cards)
     const totalSaidas = transacoes.value
       .filter(t => t.tipo === 'saida')
+      .reduce((sum, t) => sum + t.valor, 0)
+    
+    // Total de saídas PAGAS (para cálculo do saldo disponível)
+    const totalSaidasPagas = transacoes.value
+      .filter(t => t.tipo === 'saida' && t.status_pagamento === 'pago')
       .reduce((sum, t) => sum + t.valor, 0)
     
     const totalDizimo = transacoes.value
@@ -38,9 +44,9 @@ export function useFinancas() {
     return {
       totalEntradas: totalEntradasBrutas, // Mostra valor bruto nos cards
       totalEntradasLiquidas: totalEntradasLiquidas, // Para cálculos internos
-      totalSaidas,
+      totalSaidas, // Total de todas as despesas (para cards)
       totalDizimo,
-      saldoAtual: totalEntradasLiquidas - totalSaidas, // Saldo baseado em receitas líquidas - despesas
+      saldoAtual: totalEntradasLiquidas - totalSaidasPagas, // Saldo disponível: receitas líquidas - apenas despesas pagas
       transacoesHoje
     }
   })
