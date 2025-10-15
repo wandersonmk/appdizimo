@@ -141,28 +141,38 @@ const executarExclusao = async () => {
   if (!transacaoParaExcluir.value) return
   
   try {
+    console.log('🚀 Iniciando exclusão da transação:', {
+      id: transacaoParaExcluir.value.id,
+      tipo: transacaoParaExcluir.value.tipo,
+      descricao: transacaoParaExcluir.value.descricao,
+      isGrupo: transacaoParaExcluir.value.isGrupo
+    })
+    
     // Se for um grupo de despesas parceladas, excluir todas as parcelas
     if (transacaoParaExcluir.value.isGrupo) {
       await excluirDespesaParceladaCompleta(transacaoParaExcluir.value)
       toast.value?.success(`🗑️ Despesa parcelada "${transacaoParaExcluir.value.descricao}" excluída com sucesso! Todas as ${transacaoParaExcluir.value.totalParcelas} parcelas foram removidas.`)
     } else {
       // Excluir transação individual
+      console.log('🗑️ Excluindo transação individual ID:', transacaoParaExcluir.value.id)
       await excluirTransacao(transacaoParaExcluir.value.id)
       const tipoTexto = transacaoParaExcluir.value.tipo === 'entrada' ? 'Receita' : 
                        transacaoParaExcluir.value.tipo === 'dizimo' ? 'Dízimo' : 'Despesa'
       toast.value?.success(`🗑️ ${tipoTexto} "${transacaoParaExcluir.value.descricao}" excluída com sucesso!`)
     }
     
+    console.log('🔄 Atualizando lista de transações...')
     // Atualizar a lista de transações
     await fetchTransacoes()
+    console.log('✅ Lista de transações atualizada!')
     
     // Fechar modal e limpar estado
     cancelarExclusao()
     
-    console.log('✅ Transação excluída e dados atualizados!')
-  } catch (error) {
+    console.log('✅ Processo de exclusão concluído com sucesso!')
+  } catch (error: any) {
     console.error('❌ Erro ao excluir transação:', error)
-    toast.value?.error('❌ Erro ao excluir transação. Tente novamente.')
+    toast.value?.error(`❌ Erro ao excluir transação: ${error.message || 'Tente novamente.'}`)
   }
 }
 

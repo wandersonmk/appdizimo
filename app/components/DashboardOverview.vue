@@ -18,8 +18,8 @@
               <p class="text-2xl font-bold text-foreground">{{ formatCurrency(metrics.entradasHoje) }}</p>
               <p class="text-xs text-green-600 mt-1">até agora</p>
             </div>
-            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-lg">
-              <font-awesome-icon :icon="['fas', 'arrow-up']" class="text-white text-2xl drop-shadow-lg" />
+            <div class="text-green-600 text-2xl">
+              <i class="fas fa-arrow-up"></i>
             </div>
           </div>
         </div>
@@ -32,10 +32,10 @@
             <div>
               <p class="text-sm text-gray-400 mb-1">Saídas Hoje</p>
               <p class="text-2xl font-bold text-foreground">{{ formatCurrency(metrics.saidasHoje) }}</p>
-              <p class="text-xs text-red-600 mt-1">até agora</p>
+              <p class="text-xs text-red-600 mt-1">gastos do dia</p>
             </div>
-            <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
-              <font-awesome-icon :icon="['fas', 'arrow-down']" class="text-white text-2xl" />
+            <div class="text-red-600 text-2xl">
+              <i class="fas fa-arrow-down"></i>
             </div>
           </div>
         </div>
@@ -47,13 +47,13 @@
           <div class="relative z-10 flex items-center justify-between">
             <div>
               <p class="text-sm text-gray-400 mb-1">Saldo Mensal</p>
-              <p class="text-2xl font-bold" :class="metrics.saldoMensal >= 0 ? 'text-green-500' : 'text-red-500'">
+              <p class="text-2xl font-bold" :class="metrics.saldoMensal >= 0 ? 'text-green-400' : 'text-red-400'">
                 {{ formatCurrency(metrics.saldoMensal) }}
               </p>
-              <p class="text-xs text-blue-600 mt-1">este mês</p>
+              <p class="text-xs text-gray-400 mt-1">{{ metrics.totalTransacoes }} transações</p>
             </div>
-            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg">
-              <font-awesome-icon :icon="['fas', 'balance-scale']" class="text-white text-2xl" />
+            <div :class="metrics.saldoMensal >= 0 ? 'text-green-600' : 'text-red-600'" class="text-2xl">
+              <i :class="metrics.saldoMensal >= 0 ? 'fas fa-wallet' : 'fas fa-exclamation-triangle'"></i>
             </div>
           </div>
         </div>
@@ -66,24 +66,20 @@
             <div>
               <p class="text-sm text-gray-400 mb-1">Dízimo Mensal</p>
               <p class="text-2xl font-bold text-foreground">{{ formatCurrency(metrics.dizimoMensal) }}</p>
-              <p class="text-xs text-purple-600 mt-1">este mês</p>
+              <p class="text-xs text-purple-600 mt-1">contribuições</p>
             </div>
-            <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
-              <font-awesome-icon :icon="['fas', 'church']" class="text-white text-2xl" />
+            <div class="text-purple-600 text-2xl">
+              <i class="fas fa-heart"></i>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Gráficos -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Gráfico de Performance Circular -->
-        <CircularProgress :total="metrics.totalTransacoes" />
-
-        <!-- Gráfico de Transações Mensais -->
-        <div class="bg-card text-card-foreground rounded-lg border border-border shadow-sm p-6">
+      <!-- Gráfico -->
+      <div class="bg-gradient-to-br from-card to-card/80 text-card-foreground rounded-lg border border-border/50 shadow-sm p-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
           <h3 class="text-lg font-semibold text-foreground mb-4">Transações dos Últimos Meses</h3>
-          <div class="relative h-64">
+          <div class="h-80 w-full">
             <canvas ref="lineChartRef"></canvas>
           </div>
         </div>
@@ -95,10 +91,14 @@
 <script setup lang="ts">
 import { Chart, registerables } from 'chart.js'
 import { ref, onMounted, nextTick } from 'vue'
+import { useFinancas } from '../composables/useFinancas'
 
 Chart.register(...registerables)
 
-// Estados reativos para métricas (dados mockados por enquanto)
+// Composables
+const { resumoFinanceiro, transacoes, fetchTransacoes } = useFinancas()
+
+// Estados reativos para métricas
 const loading = ref(false)
 const metrics = ref({
   entradasHoje: 0,
@@ -124,69 +124,111 @@ const fetchMetrics = async () => {
   loading.value = true
   
   try {
-    console.log('Buscando métricas do banco de dados...')
+    console.log('🔄 Buscando métricas do usuário logado...')
 
-    // Chamar API que conecta ao banco via MCP Supabase
-    const data = await fetch('/api/dashboard/metrics').then(res => res.json())
+    // Buscar todas as transações do usuário
+    await fetchTransacoes()
     
-    if (data) {
-      metrics.value = {
-        entradasHoje: parseFloat(data.entradas_hoje || '0'),
-        saidasHoje: parseFloat(data.saidas_hoje || '0'),
-        saldoMensal: parseFloat(data.saldo_mensal || '0'),
-        totalTransacoes: parseInt(data.total_transacoes || '0'),
-        dizimoMensal: parseFloat(data.dizimo_mes || '0')
-      }
-      
-      console.log('✅ Métricas carregadas do banco:', metrics.value)
-    } else {
-      throw new Error('Dados não encontrados')
+    console.log('📊 Transações carregadas:', transacoes.value.length)
+
+    // Calcular métricas baseadas nas transações do usuário logado
+    const hoje = new Date().toISOString().split('T')[0]
+    const inicioMes = new Date()
+    inicioMes.setDate(1)
+    const inicioMesStr = inicioMes.toISOString().split('T')[0]
+
+    // Entradas de hoje
+    const entradasHojeTotal = transacoes.value
+      .filter(t => t.tipo === 'entrada' && t.data === hoje)
+      .reduce((sum: number, t: any) => sum + parseFloat(t.valor), 0)
+
+    // Saídas de hoje
+    const saidasHojeTotal = transacoes.value
+      .filter(t => t.tipo === 'saida' && t.data === hoje)
+      .reduce((sum: number, t: any) => sum + parseFloat(t.valor), 0)
+
+    // Transações do mês para saldo
+    const transacoesMes = transacoes.value
+      .filter(t => t.data && inicioMesStr && t.data >= inicioMesStr)
+
+    const entradasMensais = transacoesMes
+      .filter(t => t.tipo === 'entrada')
+      .reduce((sum: number, t: any) => sum + parseFloat(t.valor), 0)
+
+    const saidasMensais = transacoesMes
+      .filter(t => t.tipo === 'saida')
+      .reduce((sum: number, t: any) => sum + parseFloat(t.valor), 0)
+
+    // Dízimo do mês
+    const dizimoMensalTotal = transacoesMes
+      .filter(t => t.tipo === 'dizimo')
+      .reduce((sum: number, t: any) => sum + parseFloat(t.valor), 0)
+
+    metrics.value = {
+      entradasHoje: entradasHojeTotal,
+      saidasHoje: saidasHojeTotal,
+      saldoMensal: entradasMensais - saidasMensais,
+      totalTransacoes: transacoes.value.length,
+      dizimoMensal: dizimoMensalTotal
     }
+    
+    console.log('✅ Métricas calculadas:', metrics.value)
 
   } catch (error) {
-    console.error('❌ Erro ao carregar métricas do banco:', error)
-    
-    // Em caso de erro, usar dados atualizados do banco
-    metrics.value = {
-      entradasHoje: 250.00,   // R$ 250 em entradas hoje
-      saidasHoje: 800.00,     // R$ 800 em saídas hoje  
-      saldoMensal: -100.00,   // Saldo negativo de R$ 100 este mês
-      totalTransacoes: 8,     // 8 transações no total
-      dizimoMensal: 85.00     // R$ 85 de dízimo este mês
-    }
-    
-    console.log('📊 Usando dados de fallback:', metrics.value)
+    console.error('❌ Erro ao carregar métricas:', error)
   } finally {
     loading.value = false
   }
 }
 
-// Criar gráfico com dados reais baseados no banco
+// Criar gráfico com dados reais
 const createLineChart = async () => {
   if (!lineChartRef.value) return
 
   const ctx = lineChartRef.value.getContext('2d')
   if (!ctx) return
 
+  // Dados padrão
   let labels = ['Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out']
-  let entradasData = [320, 480, 600, 750, 590, 850]
-  let saidasData = [280, 450, 520, 680, 510, 950]
+  let entradasData = [0, 0, 0, 0, 0, 0]
+  let saidasData = [0, 0, 0, 0, 0, 0]
 
   try {
-    // Buscar dados do gráfico via API
-    const chartData = await fetch('/api/dashboard/chart-data').then(res => res.json())
+    // Obter últimos 6 meses
+    const meses = []
+    const labelsCalculados = []
+    const hoje = new Date()
     
-    if (chartData) {
-      labels = chartData.labels || labels
-      entradasData = chartData.entradas || entradasData
-      saidasData = chartData.saidas || saidasData
+    for (let i = 5; i >= 0; i--) {
+      const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1)
+      const mesAno = data.toISOString().slice(0, 7)
+      const nomeAbrev = data.toLocaleDateString('pt-BR', { month: 'short' })
+      meses.push(mesAno)
+      labelsCalculados.push(nomeAbrev.charAt(0).toUpperCase() + nomeAbrev.slice(1))
+    }
+
+    // Calcular dados reais se houver transações
+    if (transacoes.value.length > 0) {
+      labels = labelsCalculados
+      entradasData = meses.map(mes => {
+        return transacoes.value
+          .filter(t => t.tipo === 'entrada' && t.data && t.data.startsWith(mes))
+          .reduce((sum: number, t: any) => sum + parseFloat(t.valor || 0), 0)
+      })
+
+      saidasData = meses.map(mes => {
+        return transacoes.value
+          .filter(t => t.tipo === 'saida' && t.data && t.data.startsWith(mes))
+          .reduce((sum: number, t: any) => sum + parseFloat(t.valor || 0), 0)
+      })
     }
     
-    console.log('📊 Dados do gráfico carregados:', { labels, entradasData, saidasData })
+    console.log('📊 Dados do gráfico:', { labels, entradasData, saidasData })
   } catch (error) {
-    console.error('Erro ao carregar dados do gráfico, usando dados padrão:', error)
+    console.error('❌ Erro ao processar dados:', error)
   }
 
+  // Criar gráfico
   new Chart(ctx, {
     type: 'line',
     data: {
