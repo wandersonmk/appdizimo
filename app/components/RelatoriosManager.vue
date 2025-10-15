@@ -414,11 +414,11 @@ async function exportToPDF() {
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(24)
     doc.setFont('helvetica', 'bold')
-    doc.text('Wise Digital', 20, 20)
+    doc.text('Orzy', 20, 20)
     
     doc.setFontSize(14)
     doc.setFont('helvetica', 'normal')
-    doc.text('Sistema de Relatórios', 20, 30)
+    doc.text('Sistemas de Finanças', 20, 30)
     
     // Informações do relatório
     doc.setTextColor(textColor[0], textColor[1], textColor[2])
@@ -544,7 +544,7 @@ async function exportToPDF() {
       // Texto do footer
       doc.setFontSize(8)
       doc.setTextColor(107, 114, 128)
-      doc.text('Wise Digital - Sistema de Relatórios', 15, 208)
+      doc.text('Orzy - Sistemas de Finanças', 15, 208)
       doc.text(`Página ${i} de ${pageCount}`, 282, 208, { align: 'right' })
     }
     
@@ -585,7 +585,7 @@ async function exportToExcel() {
     // Preparar dados completos para o Excel
     const dadosCompletos = [
       // Informações do cabeçalho
-      ['Wise Digital - Sistema de Relatórios'],
+      ['Orzy - Sistemas de Finanças'],
       ['Relatórios de Tickets'],
       [`Gerado em: ${dataFormatada}`],
       [`Total de registros: ${relatoriosFiltrados.value.length}`]

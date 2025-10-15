@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useFinancas } from '../composables/useFinancas'
 import { useCurrencyMask } from '../composables/useCurrencyMask'
+import { useToastSafe } from '../composables/useToastSafe'
 
 // Props (se necessário no futuro)
 interface Props {
@@ -36,6 +37,9 @@ const {
 
 // Composable de máscara de moeda
 const { formatCurrency } = useCurrencyMask()
+
+// Toast para notificações
+const toast = ref<any>(null)
 
 // Estados locais
 const showAddEntradaModal = ref(false)
@@ -137,7 +141,17 @@ const executarExclusao = async () => {
   if (!transacaoParaExcluir.value) return
   
   try {
-    await excluirTransacao(transacaoParaExcluir.value.id)
+    // Se for um grupo de despesas parceladas, excluir todas as parcelas
+    if (transacaoParaExcluir.value.isGrupo) {
+      await excluirDespesaParceladaCompleta(transacaoParaExcluir.value)
+      toast.value?.success(`🗑️ Despesa parcelada "${transacaoParaExcluir.value.descricao}" excluída com sucesso! Todas as ${transacaoParaExcluir.value.totalParcelas} parcelas foram removidas.`)
+    } else {
+      // Excluir transação individual
+      await excluirTransacao(transacaoParaExcluir.value.id)
+      const tipoTexto = transacaoParaExcluir.value.tipo === 'entrada' ? 'Receita' : 
+                       transacaoParaExcluir.value.tipo === 'dizimo' ? 'Dízimo' : 'Despesa'
+      toast.value?.success(`🗑️ ${tipoTexto} "${transacaoParaExcluir.value.descricao}" excluída com sucesso!`)
+    }
     
     // Atualizar a lista de transações
     await fetchTransacoes()
@@ -148,11 +162,30 @@ const executarExclusao = async () => {
     console.log('✅ Transação excluída e dados atualizados!')
   } catch (error) {
     console.error('❌ Erro ao excluir transação:', error)
+    toast.value?.error('❌ Erro ao excluir transação. Tente novamente.')
+  }
+}
+
+// Função para excluir uma despesa parcelada completa
+const excluirDespesaParceladaCompleta = async (grupo: any) => {
+  if (!grupo.parcelas || grupo.parcelas.length === 0) return
+  
+  try {
+    // Excluir todas as parcelas do grupo
+    for (const parcela of grupo.parcelas) {
+      await excluirTransacao(parcela.id)
+    }
+    
+    console.log(`✅ Excluídas ${grupo.parcelas.length} parcelas da despesa "${grupo.descricao}"`)
+  } catch (error) {
+    console.error('❌ Erro ao excluir despesa parcelada completa:', error)
+    throw error
   }
 }
 
 const handleSubmitEntrada = async () => {
   if (!novaEntrada.value.categoria || !novaEntrada.value.descricao || novaEntrada.value.valor <= 0 || !novaEntrada.value.data) {
+    toast.value?.warning('⚠️ Por favor, preencha todos os campos obrigatórios!')
     return
   }
   
@@ -164,34 +197,56 @@ const handleSubmitEntrada = async () => {
       valor: novaEntrada.value.valor,
       data: novaEntrada.value.data
     })
+    
+    toast.value?.success(`💰 Receita "${novaEntrada.value.descricao}" adicionada com sucesso! Dízimo separado automaticamente.`)
     showAddEntradaModal.value = false
     resetEntradaForm()
   } catch (error) {
     console.error('Erro ao adicionar entrada:', error)
+    toast.value?.error('❌ Erro ao adicionar receita. Tente novamente.')
   }
 }
 
 const handleSubmitDespesa = async () => {
   // Validações básicas
   if (!novaDespesa.value.categoria || !novaDespesa.value.descricao || novaDespesa.value.valor <= 0 || !novaDespesa.value.data_vencimento) {
+    toast.value?.warning('⚠️ Por favor, preencha todos os campos obrigatórios!')
     return
   }
   
   // Validações específicas por tipo
   if (novaDespesa.value.tipo_despesa === 'parcelada' && (!novaDespesa.value.total_parcelas || novaDespesa.value.total_parcelas < 2)) {
+    toast.value?.warning('⚠️ Para despesas parceladas, informe pelo menos 2 parcelas!')
     return
   }
   
   if (novaDespesa.value.tipo_despesa === 'recorrente' && !novaDespesa.value.frequencia_recorrencia) {
+    toast.value?.warning('⚠️ Para despesas recorrentes, selecione a frequência!')
     return
   }
   
   try {
     await adicionarDespesaAvancada(novaDespesa.value)
+    
+    // Mensagem personalizada por tipo de despesa
+    let mensagem = ''
+    switch (novaDespesa.value.tipo_despesa) {
+      case 'parcelada':
+        mensagem = `📅 Despesa parcelada "${novaDespesa.value.descricao}" criada! ${novaDespesa.value.total_parcelas} parcelas adicionadas.`
+        break
+      case 'recorrente':
+        mensagem = `🔄 Despesa recorrente "${novaDespesa.value.descricao}" criada! Frequência: ${novaDespesa.value.frequencia_recorrencia}.`
+        break
+      default:
+        mensagem = `💸 Despesa "${novaDespesa.value.descricao}" adicionada com sucesso!`
+    }
+    
+    toast.value?.success(mensagem)
     showAddDespesaModal.value = false
     resetDespesaForm()
   } catch (error) {
     console.error('Erro ao adicionar despesa:', error)
+    toast.value?.error('❌ Erro ao adicionar despesa. Tente novamente.')
   }
 }
 
@@ -309,8 +364,34 @@ const toggleGrupoExpansao = (grupoId: string) => {
   }
 }
 
+// Funções wrapper com toast para ações de pagamento
+const marcarComoPageComToast = async (transacaoId: string) => {
+  try {
+    await marcarComoPago(transacaoId)
+    toast.value?.success('✅ Pagamento registrado com sucesso!')
+    await fetchTransacoes()
+  } catch (error) {
+    console.error('Erro ao marcar como pago:', error)
+    toast.value?.error('❌ Erro ao registrar pagamento. Tente novamente.')
+  }
+}
+
+const estornarPagamentoComToast = async (transacaoId: string) => {
+  try {
+    await estornarPagamento(transacaoId)
+    toast.value?.info('↩️ Pagamento estornado com sucesso!')
+    await fetchTransacoes()
+  } catch (error) {
+    console.error('Erro ao estornar pagamento:', error)
+    toast.value?.error('❌ Erro ao estornar pagamento. Tente novamente.')
+  }
+}
+
 // Inicialização
 onMounted(async () => {
+  // Inicializar toast
+  toast.value = await useToastSafe()
+  
   await fetchCategorias()
   await fetchTransacoes()
 })
@@ -650,16 +731,33 @@ onMounted(async () => {
                   <p class="text-base sm:text-lg lg:text-xl font-bold text-red-400">{{ formatCurrency(item.valorTotal) }}</p>
                   <p class="text-xs text-gray-400">Total parcelado</p>
                 </div>
-                <button 
-                  @click="toggleGrupoExpansao(item.id)"
-                  class="p-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-md transition-colors min-w-[32px] h-8 flex items-center justify-center"
-                  title="Expandir/Recolher parcelas"
-                >
-                  <font-awesome-icon 
-                    :icon="despesasParceladasExpandidas.has(item.id) ? 'chevron-up' : 'chevron-down'" 
-                    class="text-xs"
-                  />
-                </button>
+                
+                <!-- Botões do grupo -->
+                <div class="flex gap-1">
+                  <button 
+                    @click="toggleGrupoExpansao(item.id)"
+                    class="p-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-md transition-colors min-w-[32px] h-8 flex items-center justify-center"
+                    title="Expandir/Recolher parcelas"
+                  >
+                    <font-awesome-icon 
+                      :icon="despesasParceladasExpandidas.has(item.id) ? 'chevron-up' : 'chevron-down'" 
+                      class="text-xs"
+                    />
+                  </button>
+                  
+                  <!-- Botão para excluir toda a despesa parcelada -->
+                  <button
+                    @click="confirmarExclusao(item)"
+                    class="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors min-w-[32px] h-8 flex items-center justify-center relative group/delete"
+                    title="⚠️ EXCLUIR TODAS as parcelas desta despesa"
+                  >
+                    <font-awesome-icon icon="trash-alt" class="text-xs" />
+                    <!-- Indicador de múltiplas exclusões -->
+                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full flex items-center justify-center">
+                      <span class="text-[8px] font-bold text-white">{{ item.totalParcelas }}</span>
+                    </span>
+                  </button>
+                </div>
               </div>
             </div>
             
@@ -688,7 +786,7 @@ onMounted(async () => {
                     <div class="flex gap-1 sm:gap-2">
                       <button 
                         v-if="parcela.status_pagamento === 'pendente'"
-                        @click="marcarComoPago(parcela.id)"
+                        @click="marcarComoPageComToast(parcela.id)"
                         class="p-1.5 sm:p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-md sm:rounded-lg flex items-center justify-center transition-colors min-w-[32px] h-8"
                         title="Marcar como pago"
                       >
@@ -696,7 +794,7 @@ onMounted(async () => {
                       </button>
                       <button 
                         v-else
-                        @click="estornarPagamento(parcela.id)"
+                        @click="estornarPagamentoComToast(parcela.id)"
                         class="p-1.5 sm:p-2 bg-amber-500 hover:bg-amber-600 text-white rounded-md sm:rounded-lg flex items-center justify-center transition-colors min-w-[32px] h-8"
                         title="Estornar pagamento"
                       >
@@ -1093,12 +1191,14 @@ onMounted(async () => {
             <div 
               :class="[
                 'w-10 h-10 rounded-lg flex items-center justify-center',
+                transacaoParaExcluir.isGrupo ? 'bg-purple-600' :
                 transacaoParaExcluir.tipo === 'entrada' ? 'bg-green-600' : 
                 transacaoParaExcluir.tipo === 'dizimo' ? 'bg-emerald-600' : 'bg-red-600'
               ]"
             >
               <font-awesome-icon 
-                :icon="transacaoParaExcluir.tipo === 'entrada' ? 'arrow-up' : 
+                :icon="transacaoParaExcluir.isGrupo ? 'credit-card' :
+                      transacaoParaExcluir.tipo === 'entrada' ? 'arrow-up' : 
                       transacaoParaExcluir.tipo === 'dizimo' ? 'church' : 'arrow-down'"
                 class="text-white"
               />
@@ -1106,9 +1206,14 @@ onMounted(async () => {
             <div class="flex-1">
               <p class="font-semibold text-card-foreground">{{ transacaoParaExcluir.descricao }}</p>
               <div class="flex items-center gap-2 text-sm text-gray-400">
-                <span>{{ formatCurrency(transacaoParaExcluir.valor) }}</span>
-                <span>•</span>
-                <span>{{ formatarData(transacaoParaExcluir.data) }}</span>
+                <span v-if="transacaoParaExcluir.isGrupo">
+                  {{ formatCurrency(transacaoParaExcluir.valorTotal) }} • {{ transacaoParaExcluir.totalParcelas }} parcelas
+                </span>
+                <template v-else>
+                  <span>{{ formatCurrency(transacaoParaExcluir.valor || transacaoParaExcluir.valorTotal) }}</span>
+                  <span>•</span>
+                  <span>{{ formatarData(transacaoParaExcluir.data || transacaoParaExcluir.proximoVencimento) }}</span>
+                </template>
               </div>
             </div>
           </div>
@@ -1119,12 +1224,14 @@ onMounted(async () => {
             <font-awesome-icon icon="info-circle" class="text-red-400 text-sm mt-0.5" />
             <div class="text-sm">
               <p class="text-red-200 font-medium mb-1">
-                {{ transacaoParaExcluir?.tipo === 'entrada' ? 'Atenção: Receita e Dízimo' : 
+                {{ transacaoParaExcluir?.isGrupo ? '⚠️ Atenção: Despesa Parcelada Completa' :
+                   transacaoParaExcluir?.tipo === 'entrada' ? 'Atenção: Receita e Dízimo' : 
                    transacaoParaExcluir?.tipo === 'dizimo' ? 'Atenção: Dízimo Automático' : 
                    'Atenção: Despesa' }}
               </p>
               <p class="text-red-300">
-                {{ transacaoParaExcluir?.tipo === 'entrada' ? 'Esta receita e seu dízimo automático serão excluídos permanentemente.' : 
+                {{ transacaoParaExcluir?.isGrupo ? `TODAS as ${transacaoParaExcluir.totalParcelas} parcelas desta despesa serão excluídas permanentemente. Esta ação não pode ser desfeita!` :
+                   transacaoParaExcluir?.tipo === 'entrada' ? 'Esta receita e seu dízimo automático serão excluídos permanentemente.' : 
                    transacaoParaExcluir?.tipo === 'dizimo' ? 'Este dízimo será excluído. A receita original permanecerá.' : 
                    'Esta despesa será excluída permanentemente.' }}
               </p>

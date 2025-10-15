@@ -11,7 +11,7 @@
         </div>
         <div>
           <h2 class="text-lg font-semibold text-foreground">Central de Ajuda</h2>
-          <p class="text-sm text-muted-foreground">Guia completo para usar o sistema Wise Digital</p>
+          <p class="text-sm text-muted-foreground">Guia completo para usar o sistema Orzy</p>
         </div>
       </div>
     </div>

@@ -15,9 +15,9 @@
       <div class="flex items-center p-4 border-b border-border">
         <div class="flex-1 min-w-0">
           <h1 class="text-lg font-bold truncate">
-            Wise Digital
+            Orzy
           </h1>
-          <p class="text-xs text-muted-foreground">Sistema de Relatório</p>
+          <p class="text-xs text-muted-foreground">orçamento de forma leve e divertida.</p>
         </div>
       </div>
 
@@ -147,9 +147,9 @@
       <div class="flex items-center justify-between p-4 border-b border-border">
         <div class="flex-1 min-w-0">
           <h1 class="text-lg font-bold truncate">
-            Wise Digital
+            Orzy
           </h1>
-          <p class="text-xs text-muted-foreground">Sistema de Relatório</p>
+          <p class="text-xs text-muted-foreground">orçamento de forma leve e divertida.</p>
         </div>
         
         <!-- Botão fechar -->

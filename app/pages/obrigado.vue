@@ -4,9 +4,9 @@
 
 // Meta tags para SEO
 useHead({
-  title: 'Obrigado - Wise Digital',
+  title: 'Obrigado - Orzy',
   meta: [
-    { name: 'description', content: 'Obrigado por se cadastrar no Wise Digital Gestão de Relatórios' }
+    { name: 'description', content: 'Obrigado por se cadastrar no Orzy Sistemas de Finanças' }
   ]
 })
 
