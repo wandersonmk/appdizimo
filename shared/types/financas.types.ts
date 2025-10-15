@@ -32,10 +32,11 @@ export interface CategoriaFinanceira {
 }
 
 export interface ResumoFinanceiro {
-  totalEntradas: number
+  totalEntradas: number // Valor bruto das entradas (para exibição)
+  totalEntradasLiquidas?: number // Valor líquido das entradas (para cálculos)
   totalSaidas: number
   totalDizimo: number
-  saldoAtual: number
+  saldoAtual: number // Baseado em: entradas líquidas - saídas
   transacoesHoje: number
 }
 

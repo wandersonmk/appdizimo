@@ -258,9 +258,12 @@ onMounted(async () => {
         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div class="relative z-10 flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-400 mb-1">Total Entradas</p>
+            <p class="text-sm text-gray-400 mb-1">Receitas Brutas</p>
             <p class="text-2xl font-bold text-foreground">{{ formatCurrency(resumoFinanceiro.totalEntradas) }}</p>
-            <p class="text-xs text-emerald-600 mt-1">💰 Receitas do período</p>
+            <p class="text-xs text-emerald-600 mt-1">💰 Total informado</p>
+            <p class="text-xs text-emerald-500 mt-0.5">
+              🏦 Líquido: {{ formatCurrency(resumoFinanceiro.totalEntradasLiquidas || 0) }}
+            </p>
           </div>
           <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg">
             <font-awesome-icon icon="arrow-up" class="text-white text-2xl drop-shadow-lg" />
@@ -288,9 +291,10 @@ onMounted(async () => {
         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div class="relative z-10 flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-400 mb-1">Total Dízimo</p>
+            <p class="text-sm text-gray-400 mb-1">Dízimo Separado</p>
             <p class="text-2xl font-bold text-foreground">{{ formatCurrency(resumoFinanceiro.totalDizimo) }}</p>
-            <p class="text-xs text-amber-600 mt-1">⛪ 10% das entradas</p>
+            <p class="text-xs text-amber-600 mt-1">⛪ 10% automático</p>
+            <p class="text-xs text-amber-500 mt-0.5">🔒 Não afeta saldo</p>
           </div>
           <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center shadow-lg">
             <font-awesome-icon icon="church" class="text-white text-2xl drop-shadow-lg" />
@@ -303,12 +307,12 @@ onMounted(async () => {
         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div class="relative z-10 flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-400 mb-1">Saldo Atual</p>
+            <p class="text-sm text-gray-400 mb-1">Saldo Disponível</p>
             <p class="text-2xl font-bold" :class="resumoFinanceiro.saldoAtual >= 0 ? 'text-foreground' : 'text-red-400'">
               {{ formatCurrency(resumoFinanceiro.saldoAtual) }}
             </p>
             <p class="text-xs mt-1" :class="resumoFinanceiro.saldoAtual >= 0 ? 'text-indigo-600' : 'text-red-600'">
-              {{ resumoFinanceiro.saldoAtual >= 0 ? '💎 Saldo disponível' : '⚠️ Saldo negativo' }}
+              {{ resumoFinanceiro.saldoAtual >= 0 ? '💎 Receitas líq. - Despesas' : '⚠️ Mais despesas que receitas' }}
             </p>
           </div>
           <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">

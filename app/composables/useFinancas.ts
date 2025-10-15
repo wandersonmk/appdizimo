@@ -14,9 +14,15 @@ export function useFinancas() {
   const resumoFinanceiro = computed<ResumoFinanceiro>(() => {
     const hoje = new Date().toISOString().split('T')[0]
     
-    const totalEntradas = transacoes.value
+    // Entradas brutas (valor total informado pelo usuário)
+    const totalEntradasBrutas = transacoes.value
       .filter(t => t.tipo === 'entrada')
       .reduce((sum, t) => sum + t.valor, 0)
+    
+    // Entradas líquidas (valor bruto - 10% de dízimo)
+    const totalEntradasLiquidas = transacoes.value
+      .filter(t => t.tipo === 'entrada')
+      .reduce((sum, t) => sum + (t.valor * 0.9), 0) // 90% do valor original
     
     const totalSaidas = transacoes.value
       .filter(t => t.tipo === 'saida')
@@ -30,10 +36,11 @@ export function useFinancas() {
       .filter(t => t.data === hoje).length
     
     return {
-      totalEntradas,
+      totalEntradas: totalEntradasBrutas, // Mostra valor bruto nos cards
+      totalEntradasLiquidas: totalEntradasLiquidas, // Para cálculos internos
       totalSaidas,
       totalDizimo,
-      saldoAtual: totalEntradas - totalSaidas - totalDizimo,
+      saldoAtual: totalEntradasLiquidas - totalSaidas, // Saldo baseado em receitas líquidas - despesas
       transacoesHoje
     }
   })
@@ -132,10 +139,21 @@ export function useFinancas() {
         throw new Error('Usuário não autenticado')
       }
       
-      // Calcular o dízimo (10% do valor)
+      // LÓGICA DO DÍZIMO CORRIGIDA:
+      // - Valor informado pelo usuário: R$ 100,00 (valor bruto)  
+      // - Dízimo (10%): R$ 10,00
+      // - Valor líquido para saldo: R$ 90,00 (calculado no resumoFinanceiro)
+      
       const valorDizimo = transacao.valor * 0.1
       
-      // Inserir a entrada principal
+      console.log('💰 Adicionando entrada:', {
+        valorBruto: transacao.valor,
+        valorDizimo: valorDizimo,
+        valorLiquido: transacao.valor - valorDizimo,
+        descricao: transacao.descricao
+      })
+      
+      // Inserir a entrada principal (mantém valor bruto para exibição)
       const { data: entradaData, error: entradaError } = await supabase
         .from('transacoes_financeiras')
         .insert([{
@@ -143,7 +161,7 @@ export function useFinancas() {
           tipo: transacao.tipo,
           categoria_id: transacao.categoria,
           descricao: transacao.descricao,
-          valor: transacao.valor,
+          valor: transacao.valor, // Valor bruto para exibição
           data: transacao.data,
           valor_dizimo: valorDizimo
         }])
