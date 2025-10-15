@@ -20,6 +20,7 @@ const {
   categoriasSaida,
   despesasVencidas,
   despesasVencendoHoje,
+  despesasVencendoEm3Dias,
   fetchCategorias,
   fetchTransacoes,
   adicionarEntrada,
@@ -323,7 +324,7 @@ onMounted(async () => {
     </div>
 
     <!-- Alertas de Despesas Vencidas -->
-    <div v-if="despesasVencidas.length > 0 || despesasVencendoHoje.length > 0" class="space-y-3 mb-6">
+    <div v-if="despesasVencidas.length > 0 || despesasVencendoHoje.length > 0 || despesasVencendoEm3Dias.length > 0" class="space-y-3 mb-6">
       <div v-if="despesasVencidas.length > 0" class="relative bg-gradient-to-br from-card via-red-950/10 to-card text-card-foreground rounded-lg border border-red-800/20 shadow-sm p-4 group overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div class="relative z-10 flex items-center gap-3">
@@ -346,6 +347,19 @@ onMounted(async () => {
           <div>
             <p class="text-foreground font-semibold">{{ despesasVencendoHoje.length }} despesa(s) vencem hoje</p>
             <p class="text-amber-300 text-sm">📅 Lembre-se de pagar hoje</p>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="despesasVencendoEm3Dias.length > 0" class="relative bg-gradient-to-br from-card via-blue-950/10 to-card text-card-foreground rounded-lg border border-blue-800/20 shadow-sm p-4 group overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div class="relative z-10 flex items-center gap-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg">
+            <font-awesome-icon icon="bell" class="text-white" />
+          </div>
+          <div>
+            <p class="text-foreground font-semibold">{{ despesasVencendoEm3Dias.length }} despesa(s) vencem em até 3 dias</p>
+            <p class="text-blue-300 text-sm">🔔 Planeje o pagamento antecipadamente</p>
           </div>
         </div>
       </div>

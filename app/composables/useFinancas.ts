@@ -445,7 +445,8 @@ export function useFinancas() {
       t.tipo === 'saida' && 
       t.data_vencimento && 
       hoje && 
-      t.data_vencimento < hoje
+      t.data_vencimento < hoje &&
+      t.status_pagamento === 'pendente' // Só mostrar despesas pendentes
     )
   })
   
@@ -455,7 +456,28 @@ export function useFinancas() {
       t.tipo === 'saida' && 
       t.data_vencimento && 
       hoje &&
-      t.data_vencimento === hoje
+      t.data_vencimento === hoje &&
+      t.status_pagamento === 'pendente' // Só mostrar despesas pendentes
+    )
+  })
+
+  // Nova funcionalidade: Despesas vencendo nos próximos 3 dias (alertas antecipados)
+  const despesasVencendoEm3Dias = computed(() => {
+    const hoje = new Date()
+    const em3Dias = new Date()
+    em3Dias.setDate(hoje.getDate() + 3)
+    
+    const hojeStr = hoje.toISOString().split('T')[0]
+    const em3DiasStr = em3Dias.toISOString().split('T')[0]
+    
+    return transacoes.value.filter(t => 
+      t.tipo === 'saida' && 
+      t.data_vencimento && 
+      hojeStr && 
+      em3DiasStr &&
+      t.data_vencimento > hojeStr && // Depois de hoje
+      t.data_vencimento <= em3DiasStr && // Até 3 dias
+      t.status_pagamento === 'pendente' // Só pendentes
     )
   })
 
@@ -667,6 +689,7 @@ export function useFinancas() {
     categoriasDizimo: readonly(categoriasDizimo),
     despesasVencidas: readonly(despesasVencidas),
     despesasVencendoHoje: readonly(despesasVencendoHoje),
+    despesasVencendoEm3Dias: readonly(despesasVencendoEm3Dias),
     
     // Funções
     fetchCategorias,
