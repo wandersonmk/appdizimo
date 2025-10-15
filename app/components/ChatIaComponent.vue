@@ -4,12 +4,18 @@
     <div class="bg-gradient-to-r from-card to-card/80 rounded-lg border border-border/50 shadow-sm mb-6 p-6">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
-          <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-            <i class="fas fa-robot text-white text-xl"></i>
+          <div class="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform duration-200">
+            <div class="text-3xl animate-pulse">🤖</div>
           </div>
           <div>
-            <h1 class="text-xl font-semibold text-foreground">Assistente Financeiro IA</h1>
-            <p class="text-sm text-foreground/60">Especialista em gestão financeira e dízimo</p>
+            <h1 class="text-xl font-semibold text-foreground flex items-center space-x-2">
+              <span>Assistente Financeiro IA</span>
+              <span class="text-lg">💰</span>
+            </h1>
+            <p class="text-sm text-foreground/60 flex items-center space-x-1">
+              <span>🎯</span>
+              <span>Especialista em gestão financeira e dízimo</span>
+            </p>
           </div>
         </div>
         <div class="flex items-center space-x-2">
@@ -29,8 +35,8 @@
         
         <!-- Mensagem de Boas-vindas da IA -->
         <div class="flex items-start space-x-3" v-if="messages.length === 0">
-          <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-robot text-white text-sm"></i>
+          <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+            <div class="text-xl">🤖</div>
           </div>
           <div class="bg-gradient-to-r from-blue-50/10 to-purple-50/10 border border-blue-200/20 rounded-2xl rounded-tl-md p-4 max-w-md">
             <p class="text-foreground/90 text-sm leading-relaxed">
@@ -49,11 +55,11 @@
         </div>
 
         <!-- Mensagens do Chat -->
-        <div v-for="message in messages" :key="message.id">
+        <div v-for="message in messages" :key="message.id" class="animate-fadeInUp">
           <!-- Mensagem da IA -->
           <div v-if="message.sender === 'ai'" class="flex items-start space-x-3">
-            <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-              <i class="fas fa-robot text-white text-sm"></i>
+            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg hover:scale-110 transition-transform duration-200">
+              <div class="text-xl animate-bounce">🤖</div>
             </div>
             <div class="bg-gradient-to-r from-blue-50/10 to-purple-50/10 border border-blue-200/20 rounded-2xl rounded-tl-md p-4 max-w-md">
               <p class="text-foreground/90 text-sm leading-relaxed">{{ message.text }}</p>
@@ -65,28 +71,31 @@
 
           <!-- Mensagem do Usuário -->
           <div v-else class="flex items-start space-x-3 justify-end">
-            <div class="bg-gradient-to-r from-green-600 to-emerald-700 rounded-2xl rounded-tr-md p-4 max-w-md">
+            <div class="bg-gradient-to-r from-green-600 to-emerald-700 rounded-2xl rounded-tr-md p-4 max-w-md shadow-lg">
               <p class="text-white text-sm leading-relaxed">{{ message.text }}</p>
               <span class="text-xs text-white/70 mt-2 block">
                 {{ message.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }}
               </span>
             </div>
-            <div class="w-8 h-8 bg-gradient-to-r from-gray-400 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
-              <i class="fas fa-user text-white text-sm"></i>
+            <div class="w-10 h-10 bg-gradient-to-r from-orange-400 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg hover:scale-110 transition-transform duration-200">
+              <div class="text-xl">🧙‍♂️</div>
             </div>
           </div>
         </div>
 
         <!-- Indicador de digitação -->
-        <div class="flex items-start space-x-3" v-if="isTyping">
-          <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-robot text-white text-sm"></i>
+        <div class="flex items-start space-x-3 animate-fadeInUp" v-if="isTyping">
+          <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+            <div class="text-xl animate-spin">⚡</div>
           </div>
-          <div class="bg-gradient-to-r from-blue-50/10 to-purple-50/10 border border-blue-200/20 rounded-2xl rounded-tl-md p-4">
-            <div class="flex space-x-1">
-              <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-              <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-              <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+          <div class="bg-gradient-to-r from-blue-50/10 to-purple-50/10 border border-blue-200/20 rounded-2xl rounded-tl-md p-4 shadow-lg">
+            <div class="flex items-center space-x-2">
+              <span class="text-sm text-foreground/70">🤔 Pensando</span>
+              <div class="flex space-x-1">
+                <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -278,18 +287,27 @@ const autoResize = (event: Event) => {
 }
 
 /* Animação suave para as mensagens */
-.space-y-4 > * {
-  animation: fadeInUp 0.3s ease-out;
+.animate-fadeInUp {
+  animation: fadeInUp 0.4s ease-out;
 }
 
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(15px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Animação de hover para avatares */
+.hover\:scale-110:hover {
+  transform: scale(1.1);
+}
+
+.hover\:scale-105:hover {
+  transform: scale(1.05);
 }
 </style>
