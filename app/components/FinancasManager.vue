@@ -216,24 +216,24 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <!-- Cabeçalho -->
-    <div class="relative bg-gradient-to-br from-gray-900 to-slate-800 rounded-2xl p-8 shadow-lg border border-gray-700/50">
-      <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-indigo-400/20 to-blue-500/20 rounded-full blur-2xl"></div>
-      <div class="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+    <div class="relative bg-gradient-to-br from-gray-900 to-slate-800 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg border border-gray-700/50">
+      <div class="absolute top-0 right-0 w-32 h-32 sm:w-48 sm:h-48 bg-gradient-to-br from-indigo-400/20 to-blue-500/20 rounded-full blur-2xl"></div>
+      <div class="relative flex flex-col gap-4 sm:gap-6">
         <div>
-          <div class="flex items-center gap-4 mb-2">
-            <div class="w-12 h-12 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-              <font-awesome-icon icon="dollar-sign" class="text-white text-lg" />
+          <div class="flex items-center gap-3 sm:gap-4 mb-2">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+              <font-awesome-icon icon="dollar-sign" class="text-white text-sm sm:text-lg" />
             </div>
-            <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-blue-300 bg-clip-text text-transparent">
+            <h1 class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-400 to-blue-300 bg-clip-text text-transparent">
               Finanças
             </h1>
           </div>
-          <p class="text-gray-300 font-medium">💰 Gerencie suas receitas e despesas com dízimo automático</p>
-          <p class="text-gray-400 text-sm mt-1">⛪ 10% de cada entrada é automaticamente separado como dízimo</p>
+          <p class="text-gray-300 font-medium text-sm sm:text-base">💰 Gerencie suas receitas e despesas com dízimo automático</p>
+          <p class="text-gray-400 text-xs sm:text-sm mt-1">⛪ 10% de cada entrada é automaticamente separado como dízimo</p>
         </div>
-        <div class="flex gap-3 shrink-0">
+        <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <AppButton 
             @click="showAddEntradaModal = true" 
             class="bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
@@ -253,21 +253,21 @@ onMounted(async () => {
     </div>
 
     <!-- Cards de Resumo -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
       <!-- Total de Entradas -->
-      <div class="relative bg-gradient-to-br from-card via-emerald-950/10 to-card text-card-foreground rounded-lg border border-emerald-800/20 shadow-sm hover:shadow-md hover:shadow-emerald-500/10 transition-all duration-300 p-6 group overflow-hidden">
+      <div class="relative bg-gradient-to-br from-card via-emerald-950/10 to-card text-card-foreground rounded-lg border border-emerald-800/20 shadow-sm hover:shadow-md hover:shadow-emerald-500/10 transition-all duration-300 p-4 sm:p-6 group overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <div class="relative z-10 flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-400 mb-1">Receitas Brutas</p>
-            <p class="text-2xl font-bold text-foreground">{{ formatCurrency(resumoFinanceiro.totalEntradas) }}</p>
+        <div class="relative z-10 flex items-start justify-between">
+          <div class="flex-1 min-w-0">
+            <p class="text-xs sm:text-sm text-gray-400 mb-1">Receitas Brutas</p>
+            <p class="text-lg sm:text-2xl font-bold text-foreground truncate">{{ formatCurrency(resumoFinanceiro.totalEntradas) }}</p>
             <p class="text-xs text-emerald-600 mt-1">💰 Total informado</p>
-            <p class="text-xs text-emerald-500 mt-0.5">
+            <p class="text-xs text-emerald-500 mt-0.5 truncate">
               🏦 Líquido: {{ formatCurrency(resumoFinanceiro.totalEntradasLiquidas || 0) }}
             </p>
           </div>
-          <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg">
-            <font-awesome-icon icon="arrow-up" class="text-white text-2xl drop-shadow-lg" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0 ml-2">
+            <font-awesome-icon icon="arrow-up" class="text-white text-lg sm:text-2xl drop-shadow-lg" />
           </div>
         </div>
       </div>
@@ -275,41 +275,41 @@ onMounted(async () => {
       <!-- Total de Saídas -->
       <div class="relative bg-gradient-to-br from-card via-red-950/10 to-card text-card-foreground rounded-lg border border-red-800/20 shadow-sm hover:shadow-md hover:shadow-red-500/10 transition-all duration-300 p-6 group overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <div class="relative z-10 flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-400 mb-1">Total Saídas</p>
-            <p class="text-2xl font-bold text-foreground">{{ formatCurrency(resumoFinanceiro.totalSaidas) }}</p>
+        <div class="relative z-10 flex items-start justify-between">
+          <div class="flex-1 min-w-0">
+            <p class="text-xs sm:text-sm text-gray-400 mb-1">Total Saídas</p>
+            <p class="text-lg sm:text-2xl font-bold text-foreground truncate">{{ formatCurrency(resumoFinanceiro.totalSaidas) }}</p>
             <p class="text-xs text-red-600 mt-1">💸 Todas despesas (pagas + pendentes)</p>
           </div>
-          <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
-            <font-awesome-icon icon="arrow-down" class="text-white text-2xl drop-shadow-lg" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0 ml-2">
+            <font-awesome-icon icon="arrow-down" class="text-white text-lg sm:text-2xl drop-shadow-lg" />
           </div>
         </div>
       </div>
 
       <!-- Total de Dízimo -->
-      <div class="relative bg-gradient-to-br from-card via-amber-950/10 to-card text-card-foreground rounded-lg border border-amber-800/20 shadow-sm hover:shadow-md hover:shadow-amber-500/10 transition-all duration-300 p-6 group overflow-hidden">
+      <div class="relative bg-gradient-to-br from-card via-amber-950/10 to-card text-card-foreground rounded-lg border border-amber-800/20 shadow-sm hover:shadow-md hover:shadow-amber-500/10 transition-all duration-300 p-4 sm:p-6 group overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <div class="relative z-10 flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-400 mb-1">Dízimo Separado</p>
-            <p class="text-2xl font-bold text-foreground">{{ formatCurrency(resumoFinanceiro.totalDizimo) }}</p>
+        <div class="relative z-10 flex items-start justify-between">
+          <div class="flex-1 min-w-0">
+            <p class="text-xs sm:text-sm text-gray-400 mb-1">Dízimo Separado</p>
+            <p class="text-lg sm:text-2xl font-bold text-foreground truncate">{{ formatCurrency(resumoFinanceiro.totalDizimo) }}</p>
             <p class="text-xs text-amber-600 mt-1">⛪ 10% automático</p>
             <p class="text-xs text-amber-500 mt-0.5">🔒 Não afeta saldo</p>
           </div>
-          <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center shadow-lg">
-            <font-awesome-icon icon="church" class="text-white text-2xl drop-shadow-lg" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0 ml-2">
+            <font-awesome-icon icon="church" class="text-white text-lg sm:text-2xl drop-shadow-lg" />
           </div>
         </div>
       </div>
 
       <!-- Saldo Atual -->
-      <div class="relative bg-gradient-to-br from-card via-indigo-950/10 to-card text-card-foreground rounded-lg border border-indigo-800/20 shadow-sm hover:shadow-md hover:shadow-indigo-500/10 transition-all duration-300 p-6 group overflow-hidden">
+      <div class="relative bg-gradient-to-br from-card via-indigo-950/10 to-card text-card-foreground rounded-lg border border-indigo-800/20 shadow-sm hover:shadow-md hover:shadow-indigo-500/10 transition-all duration-300 p-4 sm:p-6 group overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <div class="relative z-10 flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-400 mb-1">Saldo Disponível</p>
-            <p class="text-2xl font-bold" :class="resumoFinanceiro.saldoAtual >= 0 ? 'text-foreground' : 'text-red-400'">
+        <div class="relative z-10 flex items-start justify-between">
+          <div class="flex-1 min-w-0">
+            <p class="text-xs sm:text-sm text-gray-400 mb-1">Saldo Disponível</p>
+            <p class="text-lg sm:text-2xl font-bold truncate" :class="resumoFinanceiro.saldoAtual >= 0 ? 'text-foreground' : 'text-red-400'">
               {{ formatCurrency(resumoFinanceiro.saldoAtual) }}
             </p>
             <p class="text-xs mt-1" :class="resumoFinanceiro.saldoAtual >= 0 ? 'text-indigo-600' : 'text-red-600'">
@@ -319,15 +319,15 @@ onMounted(async () => {
               📝 Despesas pendentes não afetam o saldo
             </p>
           </div>
-          <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
-            <font-awesome-icon icon="wallet" class="text-white text-2xl drop-shadow-lg" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0 ml-2">
+            <font-awesome-icon icon="wallet" class="text-white text-lg sm:text-2xl drop-shadow-lg" />
           </div>
         </div>
       </div>
     </div>
 
     <!-- Alertas de Despesas Vencidas -->
-    <div v-if="despesasVencidas.length > 0 || despesasVencendoHoje.length > 0 || despesasVencendoEm3Dias.length > 0" class="space-y-3 mb-6">
+    <div v-if="despesasVencidas.length > 0 || despesasVencendoHoje.length > 0 || despesasVencendoEm3Dias.length > 0" class="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
       <div v-if="despesasVencidas.length > 0" class="relative bg-gradient-to-br from-card via-red-950/10 to-card text-card-foreground rounded-lg border border-red-800/20 shadow-sm p-4 group overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div class="relative z-10 flex items-center gap-3">
@@ -369,18 +369,18 @@ onMounted(async () => {
     </div>
 
     <!-- Filtros -->
-    <div class="relative bg-gradient-to-br from-gray-800 to-slate-900 rounded-xl border border-gray-700/50 p-6 shadow-sm">
+    <div class="relative bg-gradient-to-br from-gray-800 to-slate-900 rounded-xl border border-gray-700/50 p-4 sm:p-6 shadow-sm">
       <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-gray-400/10 to-slate-500/10 rounded-full blur-xl"></div>
-      <div class="bg-card text-card-foreground rounded-lg border border-border shadow-sm p-6 mb-6">
-        <div class="flex items-center gap-2 mb-4">
-          <div class="w-8 h-8 bg-gradient-to-br from-gray-500 to-slate-600 rounded-lg flex items-center justify-center">
-            <font-awesome-icon icon="filter" class="text-white text-sm" />
+      <div class="bg-card text-card-foreground rounded-lg border border-border shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+        <div class="flex items-center gap-2 mb-3 sm:mb-4">
+          <div class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-gray-500 to-slate-600 rounded-lg flex items-center justify-center">
+            <font-awesome-icon icon="filter" class="text-white text-xs sm:text-sm" />
           </div>
-          <h3 class="text-lg font-semibold text-foreground">Filtros</h3>
+          <h3 class="text-base sm:text-lg font-semibold text-foreground">Filtros</h3>
         </div>
         
-        <div class="flex flex-col lg:flex-row gap-4 items-end">
-          <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="flex flex-col gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <!-- Filtro por Tipo -->
             <div>
               <label class="block text-sm font-medium text-gray-400 mb-2">📊 Tipo</label>
@@ -432,17 +432,17 @@ onMounted(async () => {
 
     <!-- Lista de Transações -->
     <div class="bg-card text-card-foreground rounded-lg border border-border shadow-sm">
-      <div class="p-6 border-b border-border">
+      <div class="p-4 sm:p-6 border-b border-border">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
-            <font-awesome-icon icon="file-alt" class="text-white" />
+          <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
+            <font-awesome-icon icon="file-alt" class="text-white text-sm sm:text-base" />
           </div>
-          <div>
-            <h3 class="text-lg font-semibold text-foreground">Transações Recentes</h3>
-            <p class="text-sm text-gray-400">📊 Histórico de movimentações financeiras</p>
+          <div class="min-w-0">
+            <h3 class="text-base sm:text-lg font-semibold text-foreground">Transações Recentes</h3>
+            <p class="text-xs sm:text-sm text-gray-400">📊 Histórico de movimentações financeiras</p>
           </div>
         </div>
-      </div>
+      }
       
       <div v-if="isLoading" class="p-12 text-center">
         <div class="relative">
@@ -472,12 +472,12 @@ onMounted(async () => {
       </div>
       
       <div v-else class="divide-y divide-border">
-        <div v-for="transacao in transacoes" :key="transacao.id" class="relative p-5 hover:bg-muted/50 transition-all duration-300 group">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-4">
+        <div v-for="transacao in transacoes" :key="transacao.id" class="relative p-3 sm:p-5 hover:bg-muted/50 transition-all duration-300 group">
+          <div class="flex items-start sm:items-center justify-between gap-3">
+            <div class="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
               <div 
                 :class="[
-                  'w-12 h-12 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300',
+                  'w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300 flex-shrink-0',
                   transacao.tipo === 'entrada' ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 
                   transacao.tipo === 'dizimo' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-gradient-to-br from-red-500 to-rose-600'
                 ]"
@@ -485,16 +485,16 @@ onMounted(async () => {
                 <font-awesome-icon 
                   :icon="transacao.tipo === 'entrada' ? 'arrow-up' : 
                         transacao.tipo === 'dizimo' ? 'church' : 'arrow-down'"
-                  class="text-white text-lg"
+                  class="text-white text-sm sm:text-lg"
                 />
               </div>
-              <div class="flex-1">
-                <p class="font-semibold text-foreground group-hover:text-white">{{ transacao.descricao }}</p>
-                <div class="flex flex-wrap items-center gap-2 text-sm text-gray-400 mt-1">
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-foreground group-hover:text-white text-sm sm:text-base truncate">{{ transacao.descricao }}</p>
+                <div class="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-400 mt-1">
                   <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-card-foreground">
                     {{ transacao.categoria?.nome }}
                   </span>
-                  <span>•</span>
+                  <span class="hidden sm:inline">•</span>
                   <span class="flex items-center gap-1">
                     📅 {{ formatarData(transacao.data) }}
                   </span>
@@ -515,10 +515,10 @@ onMounted(async () => {
                 </div>
               </div>
             </div>
-            <div class="text-right flex flex-col items-end gap-2">
+            <div class="text-right flex flex-col items-end gap-1 sm:gap-2 flex-shrink-0">
               <p 
                 :class="[
-                  'text-xl font-bold',
+                  'text-lg sm:text-xl font-bold',
                   transacao.tipo === 'entrada' ? 'text-green-400' : 
                   transacao.tipo === 'dizimo' ? 'text-emerald-400' : 'text-red-400'
                 ]"
@@ -526,7 +526,7 @@ onMounted(async () => {
                 {{ transacao.tipo === 'entrada' ? '+' : '-' }}{{ formatCurrency(transacao.valor) }}
               </p>
               
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1 sm:gap-2">
                 <!-- Status da despesa -->
                 <p 
                   :class="[
@@ -566,7 +566,7 @@ onMounted(async () => {
                   <!-- Botão de excluir para todas as transações -->
                   <button
                     @click="confirmarExclusao(transacao)"
-                    class="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs transition-colors opacity-0 group-hover:opacity-100"
+                    class="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs transition-colors sm:opacity-0 sm:group-hover:opacity-100"
                     :title="`Excluir ${transacao.tipo === 'entrada' ? 'receita' : transacao.tipo === 'dizimo' ? 'dízimo' : 'despesa'}`"
                   >
                     <font-awesome-icon icon="trash" class="text-xs" />
