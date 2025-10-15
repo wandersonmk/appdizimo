@@ -299,7 +299,8 @@ export function useFinancas() {
           descricao: despesa.descricao,
           valor: despesa.valor,
           data: new Date().toISOString().split('T')[0], // Data atual
-          data_vencimento: despesa.data_vencimento
+          data_vencimento: despesa.data_vencimento,
+          status_pagamento: 'pendente' // Despesa criada como pendente
         }])
         .select(`
           *,

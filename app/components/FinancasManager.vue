@@ -279,7 +279,7 @@ onMounted(async () => {
           <div>
             <p class="text-sm text-gray-400 mb-1">Total Saídas</p>
             <p class="text-2xl font-bold text-foreground">{{ formatCurrency(resumoFinanceiro.totalSaidas) }}</p>
-            <p class="text-xs text-red-600 mt-1">💸 Despesas do período</p>
+            <p class="text-xs text-red-600 mt-1">💸 Todas despesas (pagas + pendentes)</p>
           </div>
           <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
             <font-awesome-icon icon="arrow-down" class="text-white text-2xl drop-shadow-lg" />
@@ -314,6 +314,9 @@ onMounted(async () => {
             </p>
             <p class="text-xs mt-1" :class="resumoFinanceiro.saldoAtual >= 0 ? 'text-indigo-600' : 'text-red-600'">
               {{ resumoFinanceiro.saldoAtual >= 0 ? '💎 Receitas líq. - Despesas pagas' : '⚠️ Despesas pagas excedem receitas' }}
+            </p>
+            <p class="text-xs text-gray-500 mt-1">
+              📝 Despesas pendentes não afetam o saldo
             </p>
           </div>
           <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
