@@ -70,10 +70,10 @@ async function handleSubmit() {
       return
     }
     // Chamada para redefinir senha via Supabase (PUT /auth/v1/user)
-    const res = await fetch('https://kxvraxkisrgyhntifxrc.supabase.co/auth/v1/user', {
+    const res = await fetch('https://neykfwokdjfcbkzhtazl.supabase.co/auth/v1/user', {
       method: 'PUT',
       headers: {
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4dnJheGtpc3JneWhudGlmeHJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYzODc5MDUsImV4cCI6MjA3MTk2MzkwNX0.tOV1n6ogyk9wuU_M4eBPhe5LUttuIWpXZQPkk2Ctc5U',
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5leWtmd29rZGpmY2Jremh0YXpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNzY4NzksImV4cCI6MjA2NTg1Mjg3OX0.NZJccP4zHWlclZWuJMzoyyjeA8wJC2UVZPfHXQ0DPCk',
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       },
