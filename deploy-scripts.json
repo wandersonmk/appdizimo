@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "deploy:build": "npm run build",
+    "deploy:docker": "docker build -t appdizimo .",
+    "deploy:docker-run": "docker run -p 3000:3000 appdizimo",
+    "deploy:compose": "docker-compose up -d",
+    "deploy:vercel": "vercel --prod",
+    "deploy:netlify": "netlify deploy --prod --dir=.output/public"
+  }
+}
