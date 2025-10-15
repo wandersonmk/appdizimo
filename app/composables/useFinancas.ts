@@ -336,19 +336,74 @@ export function useFinancas() {
       clearError()
       isLoading.value = true
       
+      // Obter usuário atual da sessão
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        throw new Error('Usuário não autenticado')
+      }
+      
+      // Buscar a transação que será excluída para verificar se tem dízimo relacionado
+      const transacaoParaExcluir = transacoes.value.find(t => t.id === id)
+      if (!transacaoParaExcluir) {
+        throw new Error('Transação não encontrada')
+      }
+      
+      console.log('🗑️ Excluindo transação:', {
+        id,
+        tipo: transacaoParaExcluir.tipo,
+        valor: transacaoParaExcluir.valor,
+        descricao: transacaoParaExcluir.descricao
+      })
+      
+      // Se for uma entrada, excluir também o dízimo relacionado
+      if (transacaoParaExcluir.tipo === 'entrada') {
+        const { error: dizimoError } = await supabase
+          .from('transacoes_financeiras')
+          .delete()
+          .eq('transacao_origem_id', id)
+          .eq('tipo', 'dizimo')
+        
+        if (dizimoError) {
+          console.warn('⚠️ Erro ao excluir dízimo relacionado:', dizimoError)
+        } else {
+          console.log('✅ Dízimo relacionado também foi excluído')
+        }
+      }
+      
+      // Se for um dízimo, verificar se foi gerado automaticamente
+      if (transacaoParaExcluir.tipo === 'dizimo' && transacaoParaExcluir.transacao_origem_id) {
+        console.log('⚠️ Excluindo dízimo automático - a entrada original permanecerá')
+      }
+      
+      // Excluir a transação principal
       const { error } = await supabase
         .from('transacoes_financeiras')
         .delete()
         .eq('id', id)
+        .eq('usuario_id', user.id) // Garantir que só exclui transações do próprio usuário
       
       if (error) throw error
       
-      transacoes.value = transacoes.value.filter(t => t.id !== id)
+      // Remover da lista local
+      transacoes.value = transacoes.value.filter(t => {
+        // Remove a transação principal
+        if (t.id === id) return false
+        
+        // Se for entrada, remove também os dízimos relacionados
+        if (transacaoParaExcluir.tipo === 'entrada' && 
+            t.tipo === 'dizimo' && 
+            t.transacao_origem_id === id) {
+          return false
+        }
+        
+        return true
+      })
       
+      console.log('✅ Transação excluída com sucesso!')
       return true
     } catch (err: any) {
       errorMessage.value = err.message
-      console.error('Erro ao excluir transação:', err)
+      console.error('❌ Erro ao excluir transação:', err)
       throw err
     } finally {
       isLoading.value = false

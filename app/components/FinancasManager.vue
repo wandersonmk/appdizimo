@@ -27,6 +27,7 @@ const {
   adicionarDespesaAvancada,
   marcarComoPago,
   estornarPagamento,
+  excluirTransacao,
   formatarMoeda,
   formatarData,
   clearError
@@ -38,6 +39,8 @@ const { formatCurrency } = useCurrencyMask()
 // Estados locais
 const showAddEntradaModal = ref(false)
 const showAddDespesaModal = ref(false)
+const showConfirmDeleteModal = ref(false)
+const transacaoParaExcluir = ref<any>(null)
 const filtroTipo = ref<'todas' | 'entrada' | 'saida' | 'dizimo'>('todas')
 const filtroDataInicio = ref('')
 const filtroDataFim = ref('')
@@ -114,6 +117,35 @@ const onDespesaValorInput = (event: Event) => {
   
   // Extrai o valor numérico
   novaDespesa.value.valor = parseCurrencyValue(maskedValue)
+}
+
+// Funções de exclusão
+const confirmarExclusao = (transacao: any) => {
+  transacaoParaExcluir.value = transacao
+  showConfirmDeleteModal.value = true
+}
+
+const cancelarExclusao = () => {
+  transacaoParaExcluir.value = null
+  showConfirmDeleteModal.value = false
+}
+
+const executarExclusao = async () => {
+  if (!transacaoParaExcluir.value) return
+  
+  try {
+    await excluirTransacao(transacaoParaExcluir.value.id)
+    
+    // Atualizar a lista de transações
+    await fetchTransacoes()
+    
+    // Fechar modal e limpar estado
+    cancelarExclusao()
+    
+    console.log('✅ Transação excluída e dados atualizados!')
+  } catch (error) {
+    console.error('❌ Erro ao excluir transação:', error)
+  }
 }
 
 const handleSubmitEntrada = async () => {
@@ -488,23 +520,35 @@ onMounted(async () => {
                      transacao.status_pagamento === 'pago' ? '✅ Pago' : '💸 Pendente' }}
                 </p>
 
-                <!-- Botões de ação para despesas -->
-                <div v-if="transacao.tipo === 'saida'" class="flex gap-1">
+                <!-- Botões de ação -->
+                <div class="flex gap-1">
+                  <!-- Botões específicos para despesas -->
+                  <template v-if="transacao.tipo === 'saida'">
+                    <button
+                      v-if="transacao.status_pagamento === 'pendente'"
+                      @click="marcarComoPago(transacao.id)"
+                      class="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs transition-colors"
+                      title="Marcar como pago"
+                    >
+                      <font-awesome-icon icon="check" class="text-xs" />
+                    </button>
+                    <button
+                      v-else
+                      @click="estornarPagamento(transacao.id)"
+                      class="p-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs transition-colors"
+                      title="Estornar pagamento"
+                    >
+                      <font-awesome-icon icon="undo" class="text-xs" />
+                    </button>
+                  </template>
+                  
+                  <!-- Botão de excluir para todas as transações -->
                   <button
-                    v-if="transacao.status_pagamento === 'pendente'"
-                    @click="marcarComoPago(transacao.id)"
-                    class="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs transition-colors"
-                    title="Marcar como pago"
+                    @click="confirmarExclusao(transacao)"
+                    class="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs transition-colors opacity-0 group-hover:opacity-100"
+                    :title="`Excluir ${transacao.tipo === 'entrada' ? 'receita' : transacao.tipo === 'dizimo' ? 'dízimo' : 'despesa'}`"
                   >
-                    <font-awesome-icon icon="check" class="text-xs" />
-                  </button>
-                  <button
-                    v-else
-                    @click="estornarPagamento(transacao.id)"
-                    class="p-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs transition-colors"
-                    title="Estornar pagamento"
-                  >
-                    <font-awesome-icon icon="undo" class="text-xs" />
+                    <font-awesome-icon icon="trash" class="text-xs" />
                   </button>
                 </div>
               </div>
@@ -776,6 +820,81 @@ onMounted(async () => {
             </AppButton>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div v-if="showConfirmDeleteModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+      <div class="bg-card text-card-foreground rounded-lg border border-red-600/20 max-w-md w-full p-6 shadow-lg">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
+            <font-awesome-icon icon="exclamation-triangle" class="text-white text-lg" />
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-foreground">🗑️ Confirmar Exclusão</h3>
+            <p class="text-sm text-gray-400">Esta ação não pode ser desfeita</p>
+          </div>
+        </div>
+
+        <div v-if="transacaoParaExcluir" class="bg-muted rounded-lg p-4 mb-6">
+          <div class="flex items-center gap-3">
+            <div 
+              :class="[
+                'w-10 h-10 rounded-lg flex items-center justify-center',
+                transacaoParaExcluir.tipo === 'entrada' ? 'bg-green-600' : 
+                transacaoParaExcluir.tipo === 'dizimo' ? 'bg-emerald-600' : 'bg-red-600'
+              ]"
+            >
+              <font-awesome-icon 
+                :icon="transacaoParaExcluir.tipo === 'entrada' ? 'arrow-up' : 
+                      transacaoParaExcluir.tipo === 'dizimo' ? 'church' : 'arrow-down'"
+                class="text-white"
+              />
+            </div>
+            <div class="flex-1">
+              <p class="font-semibold text-card-foreground">{{ transacaoParaExcluir.descricao }}</p>
+              <div class="flex items-center gap-2 text-sm text-gray-400">
+                <span>{{ formatCurrency(transacaoParaExcluir.valor) }}</span>
+                <span>•</span>
+                <span>{{ formatarData(transacaoParaExcluir.data) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-red-900/20 border border-red-700/30 rounded-lg p-4 mb-6">
+          <div class="flex items-start gap-3">
+            <font-awesome-icon icon="info-circle" class="text-red-400 text-sm mt-0.5" />
+            <div class="text-sm">
+              <p class="text-red-200 font-medium mb-1">
+                {{ transacaoParaExcluir?.tipo === 'entrada' ? 'Atenção: Receita e Dízimo' : 
+                   transacaoParaExcluir?.tipo === 'dizimo' ? 'Atenção: Dízimo Automático' : 
+                   'Atenção: Despesa' }}
+              </p>
+              <p class="text-red-300">
+                {{ transacaoParaExcluir?.tipo === 'entrada' ? 'Esta receita e seu dízimo automático serão excluídos permanentemente.' : 
+                   transacaoParaExcluir?.tipo === 'dizimo' ? 'Este dízimo será excluído. A receita original permanecerá.' : 
+                   'Esta despesa será excluída permanentemente.' }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <AppButton
+            @click="cancelarExclusao"
+            variant="outline"
+            class="flex-1 border-border text-card-foreground hover:bg-muted"
+          >
+            Cancelar
+          </AppButton>
+          <AppButton
+            @click="executarExclusao"
+            class="flex-1 bg-red-600 hover:bg-red-700"
+          >
+            🗑️ Excluir
+          </AppButton>
+        </div>
       </div>
     </div>
 
