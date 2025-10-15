@@ -17,7 +17,7 @@
           <h1 class="text-lg font-bold truncate">
             Orzy
           </h1>
-          <p class="text-xs text-muted-foreground">orçamento de forma leve e divertida.</p>
+          <p class="text-xs text-muted-foreground">Orçamento de forma leve e divertida.</p>
         </div>
       </div>
 
@@ -149,7 +149,7 @@
           <h1 class="text-lg font-bold truncate">
             Orzy
           </h1>
-          <p class="text-xs text-muted-foreground">orçamento de forma leve e divertida.</p>
+          <p class="text-xs text-muted-foreground">Orçamento de forma leve e divertida.</p>
         </div>
         
         <!-- Botão fechar -->
