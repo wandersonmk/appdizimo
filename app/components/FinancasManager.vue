@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useFinancas } from '../composables/useFinancas'
+import { useCurrencyMask } from '../composables/useCurrencyMask'
 
 // Props (se necessário no futuro)
 interface Props {
@@ -31,6 +32,9 @@ const {
   clearError
 } = useFinancas()
 
+// Composable de máscara de moeda
+const { formatCurrency } = useCurrencyMask()
+
 // Estados locais
 const showAddEntradaModal = ref(false)
 const showAddDespesaModal = ref(false)
@@ -43,6 +47,7 @@ const novaEntrada = ref({
   categoria: '',
   descricao: '',
   valor: 0,
+  valorFormatado: '',
   data: new Date().toISOString().split('T')[0]
 })
 
@@ -51,6 +56,7 @@ const novaDespesa = ref({
   categoria: '',
   descricao: '',
   valor: 0,
+  valorFormatado: '',
   data_vencimento: new Date().toISOString().split('T')[0],
   tipo_despesa: 'unica' as 'unica' | 'recorrente' | 'parcelada',
   total_parcelas: 2,
@@ -64,6 +70,7 @@ const resetEntradaForm = () => {
     categoria: '',
     descricao: '',
     valor: 0,
+    valorFormatado: '',
     data: new Date().toISOString().split('T')[0]
   }
 }
@@ -73,12 +80,40 @@ const resetDespesaForm = () => {
     categoria: '',
     descricao: '',
     valor: 0,
+    valorFormatado: '',
     data_vencimento: new Date().toISOString().split('T')[0],
     tipo_despesa: 'unica',
     total_parcelas: 2,
     frequencia_recorrencia: 'mensal',
     observacoes: ''
   }
+}
+
+// Funções de manipulação de moeda
+const { applyCurrencyMask, parseCurrencyValue } = useCurrencyMask()
+
+const onEntradaValorInput = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const maskedValue = applyCurrencyMask(target.value)
+  
+  // Atualiza o valor formatado
+  novaEntrada.value.valorFormatado = maskedValue
+  target.value = maskedValue
+  
+  // Extrai o valor numérico
+  novaEntrada.value.valor = parseCurrencyValue(maskedValue)
+}
+
+const onDespesaValorInput = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const maskedValue = applyCurrencyMask(target.value)
+  
+  // Atualiza o valor formatado
+  novaDespesa.value.valorFormatado = maskedValue
+  target.value = maskedValue
+  
+  // Extrai o valor numérico
+  novaDespesa.value.valor = parseCurrencyValue(maskedValue)
 }
 
 const handleSubmitEntrada = async () => {
@@ -192,7 +227,7 @@ onMounted(async () => {
         <div class="relative z-10 flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-400 mb-1">Total Entradas</p>
-            <p class="text-2xl font-bold text-foreground">{{ formatarMoeda(resumoFinanceiro.totalEntradas) }}</p>
+            <p class="text-2xl font-bold text-foreground">{{ formatCurrency(resumoFinanceiro.totalEntradas) }}</p>
             <p class="text-xs text-emerald-600 mt-1">💰 Receitas do período</p>
           </div>
           <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg">
@@ -207,7 +242,7 @@ onMounted(async () => {
         <div class="relative z-10 flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-400 mb-1">Total Saídas</p>
-            <p class="text-2xl font-bold text-foreground">{{ formatarMoeda(resumoFinanceiro.totalSaidas) }}</p>
+            <p class="text-2xl font-bold text-foreground">{{ formatCurrency(resumoFinanceiro.totalSaidas) }}</p>
             <p class="text-xs text-red-600 mt-1">💸 Despesas do período</p>
           </div>
           <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
@@ -222,7 +257,7 @@ onMounted(async () => {
         <div class="relative z-10 flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-400 mb-1">Total Dízimo</p>
-            <p class="text-2xl font-bold text-foreground">{{ formatarMoeda(resumoFinanceiro.totalDizimo) }}</p>
+            <p class="text-2xl font-bold text-foreground">{{ formatCurrency(resumoFinanceiro.totalDizimo) }}</p>
             <p class="text-xs text-amber-600 mt-1">⛪ 10% das entradas</p>
           </div>
           <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center shadow-lg">
@@ -238,7 +273,7 @@ onMounted(async () => {
           <div>
             <p class="text-sm text-gray-400 mb-1">Saldo Atual</p>
             <p class="text-2xl font-bold" :class="resumoFinanceiro.saldoAtual >= 0 ? 'text-foreground' : 'text-red-400'">
-              {{ formatarMoeda(resumoFinanceiro.saldoAtual) }}
+              {{ formatCurrency(resumoFinanceiro.saldoAtual) }}
             </p>
             <p class="text-xs mt-1" :class="resumoFinanceiro.saldoAtual >= 0 ? 'text-indigo-600' : 'text-red-600'">
               {{ resumoFinanceiro.saldoAtual >= 0 ? '💎 Saldo disponível' : '⚠️ Saldo negativo' }}
@@ -435,7 +470,7 @@ onMounted(async () => {
                   transacao.tipo === 'dizimo' ? 'text-emerald-400' : 'text-red-400'
                 ]"
               >
-                {{ transacao.tipo === 'entrada' ? '+' : '-' }}{{ formatarMoeda(transacao.valor) }}
+                {{ transacao.tipo === 'entrada' ? '+' : '-' }}{{ formatCurrency(transacao.valor) }}
               </p>
               
               <div class="flex items-center gap-2">
@@ -477,7 +512,7 @@ onMounted(async () => {
               <!-- Informações adicionais para despesas parceladas -->
               <div v-if="transacao.tipo === 'saida' && transacao.tipo_despesa === 'parcelada'" class="text-xs text-gray-400">
                 Parcela {{ transacao.parcela_atual }}/{{ transacao.total_parcelas }}
-                <span v-if="transacao.valor_total"> - Total: {{ formatarMoeda(transacao.valor_total) }}</span>
+                <span v-if="transacao.valor_total"> - Total: {{ formatCurrency(transacao.valor_total) }}</span>
               </div>
               
               <!-- Informação para despesas recorrentes -->
@@ -546,12 +581,13 @@ onMounted(async () => {
           <div>
             <label class="block text-sm font-medium text-gray-400 mb-2">Valor *</label>
             <input
-              v-model.number="novaEntrada.valor"
-              type="number"
-              step="0.01"
-              min="0.01"
+              ref="entradaValorInput"
+              v-model="novaEntrada.valorFormatado"
+              @input="onEntradaValorInput"
+              type="text"
+              inputmode="numeric"
               class="w-full px-4 py-2 border border-border rounded-lg bg-input text-card-foreground focus:ring-2 focus:ring-ring focus:border-ring transition-colors"
-              placeholder="0,00"
+              placeholder="R$ 0,00"
               required
             />
             <p class="text-xs text-emerald-600 mt-1">
@@ -651,12 +687,13 @@ onMounted(async () => {
               {{ novaDespesa.tipo_despesa === 'parcelada' ? 'Valor Total *' : 'Valor *' }}
             </label>
             <input
-              v-model.number="novaDespesa.valor"
-              type="number"
-              step="0.01"
-              min="0.01"
+              ref="despesaValorInput"
+              v-model="novaDespesa.valorFormatado"
+              @input="onDespesaValorInput"
+              type="text"
+              inputmode="numeric"
               class="w-full px-4 py-2 border border-border rounded-lg bg-input text-card-foreground focus:ring-2 focus:ring-ring focus:border-ring transition-colors"
-              :placeholder="novaDespesa.tipo_despesa === 'parcelada' ? 'Valor total da compra' : '0,00'"
+              :placeholder="novaDespesa.tipo_despesa === 'parcelada' ? 'R$ 0,00 - valor total da compra' : 'R$ 0,00'"
               required
             />
           </div>
@@ -678,7 +715,7 @@ onMounted(async () => {
             <div>
               <label class="block text-sm font-medium text-gray-400 mb-2">Valor por Parcela</label>
               <input
-                :value="novaDespesa.valor && novaDespesa.total_parcelas ? formatarMoeda(novaDespesa.valor / novaDespesa.total_parcelas) : ''"
+                :value="novaDespesa.valor && novaDespesa.total_parcelas ? formatCurrency(novaDespesa.valor / novaDespesa.total_parcelas) : 'R$ 0,00'"
                 type="text"
                 class="w-full px-4 py-2 border border-border rounded-lg bg-muted text-gray-400 cursor-not-allowed"
                 readonly
