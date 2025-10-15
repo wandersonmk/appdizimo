@@ -38,7 +38,12 @@ import {
   faWallet,
   faPlus,
   faCreditCard,
-  faBan
+  faBan,
+  faChevronUp,
+  faChevronDown,
+  faUndoAlt,
+  faCheck,
+  faCircle
 } from '@fortawesome/free-solid-svg-icons'
 
 // This is important, we are going to let Nuxt worry about the CSS
@@ -84,7 +89,12 @@ library.add(
   faWallet,
   faPlus,
   faCreditCard,
-  faBan
+  faBan,
+  faChevronUp,
+  faChevronDown,
+  faUndoAlt,
+  faCheck,
+  faCircle
 )
 
 export default defineNuxtPlugin((nuxtApp) => {

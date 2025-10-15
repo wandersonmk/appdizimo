@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useFinancas } from '../composables/useFinancas'
 import { useCurrencyMask } from '../composables/useCurrencyMask'
 
@@ -45,6 +45,8 @@ const transacaoParaExcluir = ref<any>(null)
 const filtroTipo = ref<'todas' | 'entrada' | 'saida' | 'dizimo'>('todas')
 const filtroDataInicio = ref('')
 const filtroDataFim = ref('')
+const filtroPesquisa = ref('') // Nova variável para pesquisa por nome
+const despesasParceladasExpandidas = ref<Set<string>>(new Set()) // Para controlar expansão das parcelas
 
 // Form para nova entrada
 const novaEntrada = ref({
@@ -205,7 +207,106 @@ const limparFiltros = async () => {
   filtroTipo.value = 'todas'
   filtroDataInicio.value = ''
   filtroDataFim.value = ''
+  filtroPesquisa.value = ''
   await fetchTransacoes()
+}
+
+// Função para agrupar despesas parceladas
+const agruparDespesasParceladas = (transacoes: readonly any[]) => {
+  const grupos: any = {}
+  const transacoesAgrupadas: any[] = []
+  
+  transacoes.forEach(transacao => {
+    // Detecta se é despesa parcelada pelos padrões: "Nome (X/Y)" ou "Nome - Parcela X/Y" ou tipo_despesa = 'parcelada'
+    const isParcelada = transacao.tipo === 'saida' && (
+      transacao.tipo_despesa === 'parcelada' ||
+      /\(\d+\/\d+\)/.test(transacao.descricao) ||
+      /\s*-\s*Parcela\s+\d+\/\d+/.test(transacao.descricao)
+    )
+    
+    if (isParcelada) {
+      // Extrai a descrição base removendo os padrões de parcela
+      let descricaoBase = transacao.descricao
+        .replace(/\s*\(\d+\/\d+\).*$/, '') // Remove "(X/Y)" e tudo após
+        .replace(/\s*-\s*Parcela\s+\d+\/\d+.*$/, '') // Remove "- Parcela X/Y" e tudo após
+        .trim()
+      
+      if (!grupos[descricaoBase]) {
+        grupos[descricaoBase] = {
+          id: `grupo_${descricaoBase.replace(/\s/g, '_')}`,
+          descricao: descricaoBase,
+          tipo: 'saida',
+          tipo_despesa: 'parcelada',
+          isGrupo: true,
+          parcelas: [],
+          totalParcelas: 0,
+          parcelasPagas: 0,
+          valorTotal: 0,
+          proximoVencimento: null,
+          categoria: transacao.categoria
+        }
+        transacoesAgrupadas.push(grupos[descricaoBase])
+      }
+      
+      grupos[descricaoBase].parcelas.push(transacao)
+      grupos[descricaoBase].totalParcelas++
+      grupos[descricaoBase].valorTotal += transacao.valor || 0
+      
+      if (transacao.status_pagamento === 'pago') {
+        grupos[descricaoBase].parcelasPagas++
+      }
+      
+      // Define próximo vencimento (primeira parcela não paga)
+      if (transacao.status_pagamento !== 'pago') {
+        if (!grupos[descricaoBase].proximoVencimento || 
+            new Date(transacao.data_vencimento) < new Date(grupos[descricaoBase].proximoVencimento)) {
+          grupos[descricaoBase].proximoVencimento = transacao.data_vencimento
+        }
+      }
+    } else {
+      // Transações normais (não parceladas)
+      transacoesAgrupadas.push(transacao)
+    }
+  })
+  
+  return transacoesAgrupadas
+}
+
+// Função para filtrar transações incluindo pesquisa por nome
+const transacoesFiltradas = computed(() => {
+  let filtradas = transacoes.value
+  
+  // Aplicar filtro de pesquisa por nome
+  if (filtroPesquisa.value.trim()) {
+    filtradas = filtradas.filter(transacao => 
+      transacao.descricao.toLowerCase().includes(filtroPesquisa.value.toLowerCase())
+    )
+  }
+  
+  // Aplicar outros filtros existentes
+  if (filtroTipo.value !== 'todas') {
+    filtradas = filtradas.filter(transacao => transacao.tipo === filtroTipo.value)
+  }
+  
+  if (filtroDataInicio.value) {
+    filtradas = filtradas.filter(transacao => transacao.data >= filtroDataInicio.value)
+  }
+  
+  if (filtroDataFim.value) {
+    filtradas = filtradas.filter(transacao => transacao.data <= filtroDataFim.value)
+  }
+  
+  // Agrupar despesas parceladas
+  return agruparDespesasParceladas(filtradas)
+})
+
+// Função para alternar expansão de grupo
+const toggleGrupoExpansao = (grupoId: string) => {
+  if (despesasParceladasExpandidas.value.has(grupoId)) {
+    despesasParceladasExpandidas.value.delete(grupoId)
+  } else {
+    despesasParceladasExpandidas.value.add(grupoId)
+  }
 }
 
 // Inicialização
@@ -415,6 +516,17 @@ onMounted(async () => {
         </div>
         
         <div class="flex flex-col gap-4">
+          <!-- Campo de Pesquisa -->
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">🔍 Pesquisar por nome</label>
+            <input 
+              v-model="filtroPesquisa"
+              type="text"
+              placeholder="Digite o nome da transação..."
+              class="w-full px-4 py-2 border border-border rounded-lg bg-input text-card-foreground focus:ring-2 focus:ring-ring focus:border-ring transition-colors"
+            >
+          </div>
+
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <!-- Filtro por Tipo -->
             <div>
@@ -507,122 +619,204 @@ onMounted(async () => {
       </div>
       
       <div v-else class="divide-y divide-border">
-        <div v-for="transacao in transacoes" :key="transacao.id" class="relative p-3 sm:p-5 hover:bg-muted/50 transition-all duration-300 group">
-          <div class="flex items-start sm:items-center justify-between gap-3">
-            <div class="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
-              <div 
-                :class="[
-                  'w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300 flex-shrink-0',
-                  transacao.tipo === 'entrada' ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 
-                  transacao.tipo === 'dizimo' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-gradient-to-br from-red-500 to-rose-600'
-                ]"
-              >
-                <font-awesome-icon 
-                  :icon="transacao.tipo === 'entrada' ? 'arrow-up' : 
-                        transacao.tipo === 'dizimo' ? 'church' : 'arrow-down'"
-                  class="text-white text-sm sm:text-lg"
-                />
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="font-semibold text-foreground group-hover:text-white text-sm sm:text-base truncate">{{ transacao.descricao }}</p>
-                <div class="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-400 mt-1">
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-card-foreground">
-                    {{ transacao.categoria?.nome }}
-                  </span>
-                  <span class="hidden sm:inline">•</span>
-                  <span class="flex items-center gap-1">
-                    📅 {{ formatarData(transacao.data) }}
-                  </span>
-                  <span v-if="transacao.data_vencimento && transacao.tipo === 'saida'" 
-                        :class="[
-                          'flex items-center gap-1',
-                          new Date(transacao.data_vencimento) < new Date() && transacao.status_pagamento === 'pendente' ? 'text-red-400' :
-                          new Date(transacao.data_vencimento).toDateString() === new Date().toDateString() && transacao.status_pagamento === 'pendente' ? 'text-amber-400' :
-                          'text-gray-400'
-                        ]">
-                    ⏰ {{ new Date(transacao.data_vencimento) < new Date() && transacao.status_pagamento === 'pendente' ? 'Vencida:' : 'Vence:' }} {{ formatarData(transacao.data_vencimento) }}
-                  </span>
+        <div v-for="item in transacoesFiltradas" :key="item.id" class="relative transition-all duration-300">
+          <!-- Grupo de despesas parceladas -->
+          <div v-if="item.isGrupo" class="p-3 sm:p-5 hover:bg-muted/50 group">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3 sm:gap-4 flex-1">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                  <font-awesome-icon icon="credit-card" class="text-white text-sm sm:text-lg" />
                 </div>
-                
-                <!-- Observações -->
-                <div v-if="transacao.observacoes" class="text-xs text-gray-500 mt-1 italic">
-                  "{{ transacao.observacoes }}"
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <p class="font-semibold text-foreground text-sm sm:text-base truncate">{{ item.descricao }}</p>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                      {{ item.parcelasPagas }}/{{ item.totalParcelas }} pagas
+                    </span>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-400 mt-1">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-card-foreground">
+                      {{ item.categoria?.nome }}
+                    </span>
+                    <span class="hidden sm:inline">•</span>
+                    <span v-if="item.proximoVencimento" class="flex items-center gap-1 text-amber-400">
+                      ⏰ Próximo: {{ formatarData(item.proximoVencimento) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="text-right flex items-center gap-2">
+                <div class="text-right">
+                  <p class="text-lg sm:text-xl font-bold text-red-400">{{ formatCurrency(item.valorTotal) }}</p>
+                  <p class="text-xs text-gray-400">Total parcelado</p>
+                </div>
+                <button 
+                  @click="toggleGrupoExpansao(item.id)"
+                  class="ml-1 p-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-md transition-colors"
+                  title="Expandir/Recolher parcelas"
+                >
+                  <font-awesome-icon 
+                    :icon="despesasParceladasExpandidas.has(item.id) ? 'chevron-up' : 'chevron-down'" 
+                    class="text-xs"
+                  />
+                </button>
+              </div>
+            </div>
+            
+            <!-- Parcelas expandidas -->
+            <div v-if="despesasParceladasExpandidas.has(item.id)" class="mt-4 ml-6 space-y-2 border-l-2 border-orange-200 pl-4">
+              <div v-for="parcela in item.parcelas" :key="parcela.id" class="p-3 bg-muted/30 rounded-lg">
+                <div class="flex items-center justify-between">
+                  <div class="flex-1">
+                    <p class="font-medium text-sm">{{ parcela.descricao }}</p>
+                    <div class="flex items-center gap-2 text-xs text-gray-400 mt-1">
+                      <span>📅 {{ formatarData(parcela.data_vencimento) }}</span>
+                      <span 
+                        :class="[
+                          'px-2 py-1 rounded-full text-xs font-medium',
+                          parcela.status_pagamento === 'pago' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
+                        ]"
+                      >
+                        {{ parcela.status_pagamento === 'pago' ? 'Pago' : 'Pendente' }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="text-right flex items-center gap-2">
+                    <p class="font-bold text-sm" :class="parcela.status_pagamento === 'pago' ? 'text-green-600' : 'text-red-400'">
+                      {{ formatCurrency(parcela.valor) }}
+                    </p>
+                    <div class="flex gap-2">
+                      <button 
+                        v-if="parcela.status_pagamento === 'pendente'"
+                        @click="marcarComoPago(parcela.id)"
+                        class="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center justify-center transition-colors"
+                        title="Marcar como pago"
+                      >
+                        <font-awesome-icon icon="check" class="text-xs" />
+                      </button>
+                      <button 
+                        v-else
+                        @click="estornarPagamento(parcela.id)"
+                        class="p-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg flex items-center justify-center transition-colors"
+                        title="Estornar pagamento"
+                      >
+                        <font-awesome-icon icon="undo-alt" class="text-xs" />
+                      </button>
+                      <button 
+                        @click="transacaoParaExcluir = parcela; showConfirmDeleteModal = true"
+                        class="px-2 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center transition-colors text-xs"
+                        title="Excluir parcela"
+                      >
+                        <font-awesome-icon icon="trash-alt" class="text-xs" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-            <div class="text-right flex flex-col items-end gap-1 sm:gap-2 flex-shrink-0">
-              <p 
-                :class="[
-                  'text-lg sm:text-xl font-bold',
-                  transacao.tipo === 'entrada' ? 'text-green-400' : 
-                  transacao.tipo === 'dizimo' ? 'text-emerald-400' : 'text-red-400'
-                ]"
-              >
-                {{ transacao.tipo === 'entrada' ? '+' : '-' }}{{ formatCurrency(transacao.valor) }}
-              </p>
-              
-              <div class="flex items-center gap-1 sm:gap-2">
-                <!-- Status da despesa -->
-                <p 
+          </div>
+
+          <!-- Transação individual -->
+          <div v-else class="p-3 sm:p-5 hover:bg-muted/50 group">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3 sm:gap-4 flex-1">
+                <div 
                   :class="[
-                    'text-xs font-medium capitalize px-2 py-1 rounded-full',
-                    transacao.tipo === 'entrada' ? 'bg-green-900/50 text-green-300' :
-                    transacao.tipo === 'dizimo' ? 'bg-emerald-900/50 text-emerald-300' : 
-                    transacao.status_pagamento === 'pago' ? 'bg-blue-900/50 text-blue-300' : 'bg-red-900/50 text-red-300'
+                    'w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-md flex-shrink-0',
+                    item.tipo === 'entrada' ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 
+                    item.tipo === 'dizimo' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-gradient-to-br from-red-500 to-rose-600'
                   ]"
                 >
-                  {{ transacao.tipo === 'dizimo' ? '⛪ Dízimo' : 
-                     transacao.tipo === 'entrada' ? '💰 Entrada' : 
-                     transacao.status_pagamento === 'pago' ? '✅ Pago' : '💸 Pendente' }}
-                </p>
+                  <font-awesome-icon 
+                    :icon="item.tipo === 'entrada' ? 'arrow-up' : 
+                          item.tipo === 'dizimo' ? 'church' : 'arrow-down'"
+                    class="text-white text-sm sm:text-lg"
+                  />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-1">
+                    <p class="font-semibold text-foreground text-sm sm:text-base truncate">{{ item.descricao }}</p>
+                    <span 
+                      :class="[
+                        'px-2 py-1 rounded-full text-xs font-medium',
+                        item.tipo === 'entrada' ? 'bg-green-100 text-green-800' :
+                        item.tipo === 'dizimo' ? 'bg-emerald-100 text-emerald-800' : 
+                        item.status_pagamento === 'pago' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
+                      ]"
+                    >
+                      {{ item.tipo === 'dizimo' ? 'Dízimo' : 
+                         item.tipo === 'entrada' ? 'Entrada' : 
+                         item.status_pagamento === 'pago' ? 'Pago' : 'Pendente' }}
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2 text-xs text-gray-400">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-card-foreground">
+                      {{ item.categoria?.nome }}
+                    </span>
+                    <span v-if="item.data_vencimento && item.tipo === 'saida'" 
+                          :class="[
+                            'flex items-center gap-1',
+                            new Date(item.data_vencimento) < new Date() && item.status_pagamento === 'pendente' ? 'text-red-400' :
+                            new Date(item.data_vencimento).toDateString() === new Date().toDateString() && item.status_pagamento === 'pendente' ? 'text-amber-400' :
+                            'text-gray-400'
+                          ]">
+                      ⏰ {{ new Date(item.data_vencimento) < new Date() && item.status_pagamento === 'pendente' ? 'Vencida' : 'Vence' }}: {{ formatarData(item.data_vencimento) }}
+                    </span>
+                  </div>
+                  
+                  <!-- Observações -->
+                  <div v-if="item.observacoes" class="text-xs text-gray-500 mt-1 italic">
+                    "{{ item.observacoes }}"
+                  </div>
+                </div>
+              </div>
+              <div class="text-right flex items-center gap-3">
+                <div>
+                  <p 
+                    :class="[
+                      'text-lg sm:text-xl font-bold',
+                      item.tipo === 'entrada' ? 'text-green-600' : 
+                      item.tipo === 'dizimo' ? 'text-emerald-600' : 'text-red-600'
+                    ]"
+                  >
+                    {{ item.tipo === 'entrada' ? '+' : '-' }}{{ formatCurrency(item.valor) }}
+                  </p>
+                  <div v-if="item.tipo === 'saida' && item.status_pagamento === 'pago' && item.data_pagamento" class="text-xs text-blue-600">
+                    Pago em {{ formatarData(item.data_pagamento) }}
+                  </div>
+                </div>
 
                 <!-- Botões de ação -->
-                <div class="flex gap-1">
+                <div class="flex gap-2">
                   <!-- Botões específicos para despesas -->
-                  <template v-if="transacao.tipo === 'saida'">
+                  <template v-if="item.tipo === 'saida'">
                     <button
-                      v-if="transacao.status_pagamento === 'pendente'"
-                      @click="marcarComoPago(transacao.id)"
-                      class="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs transition-colors"
+                      v-if="item.status_pagamento === 'pendente'"
+                      @click="marcarComoPago(item.id)"
+                      class="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center justify-center transition-colors"
                       title="Marcar como pago"
                     >
-                      <font-awesome-icon icon="credit-card" class="text-xs" />
+                      <font-awesome-icon icon="check" class="text-xs" />
                     </button>
                     <button
                       v-else
-                      @click="estornarPagamento(transacao.id)"
-                      class="p-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs transition-colors"
+                      @click="estornarPagamento(item.id)"
+                      class="p-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg flex items-center justify-center transition-colors"
                       title="Estornar pagamento"
                     >
-                      <font-awesome-icon icon="ban" class="text-xs" />
+                      <font-awesome-icon icon="undo-alt" class="text-xs" />
                     </button>
                   </template>
                   
-                  <!-- Botão de excluir para todas as transações -->
+                  <!-- Botão de excluir para todas as transações - SEMPRE VISÍVEL -->
                   <button
-                    @click="confirmarExclusao(transacao)"
-                    class="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs transition-colors sm:opacity-0 sm:group-hover:opacity-100"
-                    :title="`Excluir ${transacao.tipo === 'entrada' ? 'receita' : transacao.tipo === 'dizimo' ? 'dízimo' : 'despesa'}`"
+                    @click="confirmarExclusao(item)"
+                    class="px-2 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center transition-colors text-xs"
+                    :title="`Excluir ${item.tipo === 'entrada' ? 'receita' : item.tipo === 'dizimo' ? 'dízimo' : 'despesa'}`"
                   >
-                    <font-awesome-icon icon="trash" class="text-xs" />
+                    <font-awesome-icon icon="trash-alt" class="text-xs" />
                   </button>
                 </div>
-              </div>
-
-              <!-- Informações adicionais para despesas parceladas -->
-              <div v-if="transacao.tipo === 'saida' && transacao.tipo_despesa === 'parcelada'" class="text-xs text-gray-400">
-                Parcela {{ transacao.parcela_atual }}/{{ transacao.total_parcelas }}
-                <span v-if="transacao.valor_total"> - Total: {{ formatCurrency(transacao.valor_total) }}</span>
-              </div>
-              
-              <!-- Informação para despesas recorrentes -->
-              <div v-if="transacao.tipo === 'saida' && transacao.tipo_despesa === 'recorrente'" class="text-xs text-gray-400">
-                🔄 {{ transacao.frequencia_recorrencia }}
-              </div>
-              
-              <!-- Data de pagamento se pago -->
-              <div v-if="transacao.tipo === 'saida' && transacao.status_pagamento === 'pago' && transacao.data_pagamento" class="text-xs text-blue-400">
-                Pago em {{ formatarData(transacao.data_pagamento) }}
               </div>
             </div>
           </div>
