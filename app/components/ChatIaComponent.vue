@@ -28,7 +28,7 @@
       <div ref="messagesContainer" class="flex-1 overflow-y-auto p-6 space-y-4">
         
         <!-- Mensagem de Boas-vindas da IA -->
-        <div class="flex items-start space-x-3">
+        <div class="flex items-start space-x-3" v-if="messages.length === 0">
           <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
             <i class="fas fa-robot text-white text-sm"></i>
           </div>
@@ -48,15 +48,32 @@
           </div>
         </div>
 
-        <!-- Exemplo de mensagem do usuário -->
-        <div class="flex items-start space-x-3 justify-end" v-if="false">
-          <div class="bg-gradient-to-r from-green-600 to-emerald-700 rounded-2xl rounded-tr-md p-4 max-w-md">
-            <p class="text-white text-sm leading-relaxed">
-              Como posso melhorar minha organização financeira?
-            </p>
+        <!-- Mensagens do Chat -->
+        <div v-for="message in messages" :key="message.id">
+          <!-- Mensagem da IA -->
+          <div v-if="message.sender === 'ai'" class="flex items-start space-x-3">
+            <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-robot text-white text-sm"></i>
+            </div>
+            <div class="bg-gradient-to-r from-blue-50/10 to-purple-50/10 border border-blue-200/20 rounded-2xl rounded-tl-md p-4 max-w-md">
+              <p class="text-foreground/90 text-sm leading-relaxed">{{ message.text }}</p>
+              <span class="text-xs text-foreground/50 mt-2 block">
+                {{ message.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }}
+              </span>
+            </div>
           </div>
-          <div class="w-8 h-8 bg-gradient-to-r from-gray-400 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-user text-white text-sm"></i>
+
+          <!-- Mensagem do Usuário -->
+          <div v-else class="flex items-start space-x-3 justify-end">
+            <div class="bg-gradient-to-r from-green-600 to-emerald-700 rounded-2xl rounded-tr-md p-4 max-w-md">
+              <p class="text-white text-sm leading-relaxed">{{ message.text }}</p>
+              <span class="text-xs text-white/70 mt-2 block">
+                {{ message.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }}
+              </span>
+            </div>
+            <div class="w-8 h-8 bg-gradient-to-r from-gray-400 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-user text-white text-sm"></i>
+            </div>
           </div>
         </div>
 
@@ -124,11 +141,21 @@
 <script setup lang="ts">
 import { ref, nextTick } from 'vue'
 
+// Interface para mensagens
+interface Message {
+  id: number
+  text: string
+  sender: 'user' | 'ai'
+  timestamp: Date
+}
+
 // Estados do componente
 const newMessage = ref('')
 const isLoading = ref(false)
 const isTyping = ref(false)
 const messagesContainer = ref<HTMLElement>()
+const messages = ref<Message[]>([])
+let messageIdCounter = 1
 
 // Sugestões rápidas
 const suggestions = ref([
@@ -145,32 +172,80 @@ const selectSuggestion = (suggestion: string) => {
   newMessage.value = suggestion
 }
 
+// Função para scroll automático
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (messagesContainer.value) {
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    }
+  })
+}
+
 // Função para enviar mensagem
 const sendMessage = async () => {
   if (!newMessage.value.trim() || isLoading.value) return
 
-  const message = newMessage.value.trim()
+  // Adicionar mensagem do usuário
+  const userMessage: Message = {
+    id: messageIdCounter++,
+    text: newMessage.value.trim(),
+    sender: 'user',
+    timestamp: new Date()
+  }
+  
+  messages.value.push(userMessage)
+  const messageText = newMessage.value.trim()
   newMessage.value = ''
+  
+  // Scroll para o final
+  scrollToBottom()
+  
+  // Mostrar que está carregando
+  isTyping.value = true
   isLoading.value = true
-
+  
   try {
-    // Aqui será implementada a lógica de envio para a IA
-    console.log('Mensagem enviada:', message)
+    // Fazer requisição para API
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: messageText
+      })
+    })
 
-    // Simular resposta da IA
-    isTyping.value = true
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    isTyping.value = false
+    const data = await response.json() as { success: boolean; response: string }
 
-    // Scroll automático para a última mensagem
-    await nextTick()
-    if (messagesContainer.value) {
-      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    if (data.success) {
+      const aiMessage: Message = {
+        id: messageIdCounter++,
+        text: data.response,
+        sender: 'ai',
+        timestamp: new Date()
+      }
+      
+      messages.value.push(aiMessage)
+    } else {
+      throw new Error('Resposta inválida da API')
     }
-  } catch (error) {
+    
+  } catch (error: any) {
     console.error('Erro ao enviar mensagem:', error)
+    
+    const errorMessage: Message = {
+      id: messageIdCounter++,
+      text: 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.',
+      sender: 'ai',
+      timestamp: new Date()
+    }
+    
+    messages.value.push(errorMessage)
   } finally {
+    isTyping.value = false
     isLoading.value = false
+    scrollToBottom()
   }
 }
 
