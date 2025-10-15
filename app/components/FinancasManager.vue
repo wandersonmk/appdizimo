@@ -220,20 +220,55 @@ onMounted(async () => {
     <!-- Cabeçalho -->
     <div class="relative bg-gradient-to-br from-gray-900 to-slate-800 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg border border-gray-700/50">
       <div class="absolute top-0 right-0 w-32 h-32 sm:w-48 sm:h-48 bg-gradient-to-br from-indigo-400/20 to-blue-500/20 rounded-full blur-2xl"></div>
-      <div class="relative flex flex-col gap-4 sm:gap-6">
+      
+      <!-- Layout Mobile: Mantém vertical -->
+      <div class="relative sm:hidden flex flex-col gap-4">
         <div>
-          <div class="flex items-center gap-3 sm:gap-4 mb-2">
-            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-              <font-awesome-icon icon="dollar-sign" class="text-white text-sm sm:text-lg" />
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+              <font-awesome-icon icon="dollar-sign" class="text-white text-sm" />
             </div>
-            <h1 class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-400 to-blue-300 bg-clip-text text-transparent">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-blue-300 bg-clip-text text-transparent">
               Finanças
             </h1>
           </div>
-          <p class="text-gray-300 font-medium text-sm sm:text-base">💰 Gerencie suas receitas e despesas com dízimo automático</p>
-          <p class="text-gray-400 text-xs sm:text-sm mt-1">⛪ 10% de cada entrada é automaticamente separado como dízimo</p>
+          <p class="text-gray-300 font-medium text-sm">💰 Gerencie suas receitas e despesas com dízimo automático</p>
+          <p class="text-gray-400 text-xs mt-1">⛪ 10% de cada entrada é automaticamente separado como dízimo</p>
         </div>
-        <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+        <div class="flex flex-col gap-2">
+          <AppButton 
+            @click="showAddEntradaModal = true" 
+            class="bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+          >
+            <font-awesome-icon icon="plus" class="mr-2" />
+            💰 Nova Entrada
+          </AppButton>
+          <AppButton 
+            @click="showAddDespesaModal = true" 
+            class="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+          >
+            <font-awesome-icon icon="calendar-alt" class="mr-2" />
+            📅 Nova Despesa
+          </AppButton>
+        </div>
+      </div>
+
+      <!-- Layout Desktop: Horizontal com botões à direita -->
+      <div class="relative hidden sm:flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+            <font-awesome-icon icon="dollar-sign" class="text-white text-lg" />
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-blue-300 bg-clip-text text-transparent">
+              Finanças
+            </h1>
+            <p class="text-gray-300 font-medium text-base">💰 Gerencie suas receitas e despesas com dízimo automático</p>
+            <p class="text-gray-400 text-sm">⛪ 10% de cada entrada é automaticamente separado como dízimo</p>
+          </div>
+        </div>
+        
+        <div class="flex gap-3 ml-6 flex-shrink-0">
           <AppButton 
             @click="showAddEntradaModal = true" 
             class="bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
