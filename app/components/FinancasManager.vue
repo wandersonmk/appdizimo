@@ -530,7 +530,7 @@ onMounted(async () => {
                       class="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs transition-colors"
                       title="Marcar como pago"
                     >
-                      <font-awesome-icon icon="check" class="text-xs" />
+                      <font-awesome-icon icon="credit-card" class="text-xs" />
                     </button>
                     <button
                       v-else
@@ -538,7 +538,7 @@ onMounted(async () => {
                       class="p-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs transition-colors"
                       title="Estornar pagamento"
                     >
-                      <font-awesome-icon icon="undo" class="text-xs" />
+                      <font-awesome-icon icon="ban" class="text-xs" />
                     </button>
                   </template>
                   
