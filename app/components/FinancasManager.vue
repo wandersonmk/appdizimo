@@ -442,7 +442,7 @@ onMounted(async () => {
             <p class="text-xs sm:text-sm text-gray-400">📊 Histórico de movimentações financeiras</p>
           </div>
         </div>
-      }
+      </div>
       
       <div v-if="isLoading" class="p-12 text-center">
         <div class="relative">
