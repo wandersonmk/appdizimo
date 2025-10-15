@@ -622,8 +622,8 @@ onMounted(async () => {
         <div v-for="item in transacoesFiltradas" :key="item.id" class="relative transition-all duration-300">
           <!-- Grupo de despesas parceladas -->
           <div v-if="item.isGrupo" class="p-3 sm:p-5 hover:bg-muted/50 group">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3 sm:gap-4 flex-1">
+            <div class="flex items-start sm:items-center justify-between gap-3">
+              <div class="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
                 <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
                   <font-awesome-icon icon="credit-card" class="text-white text-sm sm:text-lg" />
                 </div>
@@ -645,14 +645,14 @@ onMounted(async () => {
                   </div>
                 </div>
               </div>
-              <div class="text-right flex items-center gap-2">
+              <div class="flex flex-col items-end gap-2 flex-shrink-0">
                 <div class="text-right">
-                  <p class="text-lg sm:text-xl font-bold text-red-400">{{ formatCurrency(item.valorTotal) }}</p>
+                  <p class="text-base sm:text-lg lg:text-xl font-bold text-red-400">{{ formatCurrency(item.valorTotal) }}</p>
                   <p class="text-xs text-gray-400">Total parcelado</p>
                 </div>
                 <button 
                   @click="toggleGrupoExpansao(item.id)"
-                  class="ml-1 p-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-md transition-colors"
+                  class="p-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-md transition-colors min-w-[32px] h-8 flex items-center justify-center"
                   title="Expandir/Recolher parcelas"
                 >
                   <font-awesome-icon 
@@ -664,16 +664,16 @@ onMounted(async () => {
             </div>
             
             <!-- Parcelas expandidas -->
-            <div v-if="despesasParceladasExpandidas.has(item.id)" class="mt-4 ml-6 space-y-2 border-l-2 border-orange-200 pl-4">
+            <div v-if="despesasParceladasExpandidas.has(item.id)" class="mt-4 ml-3 sm:ml-6 space-y-2 border-l-2 border-orange-200 pl-3 sm:pl-4">
               <div v-for="parcela in item.parcelas" :key="parcela.id" class="p-3 bg-muted/30 rounded-lg">
-                <div class="flex items-center justify-between">
-                  <div class="flex-1">
-                    <p class="font-medium text-sm">{{ parcela.descricao }}</p>
-                    <div class="flex items-center gap-2 text-xs text-gray-400 mt-1">
-                      <span>📅 {{ formatarData(parcela.data_vencimento) }}</span>
+                <div class="flex items-start sm:items-center justify-between gap-3">
+                  <div class="flex-1 min-w-0">
+                    <p class="font-medium text-sm truncate">{{ parcela.descricao }}</p>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs text-gray-400 mt-1">
+                      <span class="w-fit">📅 {{ formatarData(parcela.data_vencimento) }}</span>
                       <span 
                         :class="[
-                          'px-2 py-1 rounded-full text-xs font-medium',
+                          'px-2 py-1 rounded-full text-xs font-medium w-fit',
                           parcela.status_pagamento === 'pago' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
                         ]"
                       >
@@ -681,15 +681,15 @@ onMounted(async () => {
                       </span>
                     </div>
                   </div>
-                  <div class="text-right flex items-center gap-2">
+                  <div class="flex flex-col items-end gap-2">
                     <p class="font-bold text-sm" :class="parcela.status_pagamento === 'pago' ? 'text-green-600' : 'text-red-400'">
                       {{ formatCurrency(parcela.valor) }}
                     </p>
-                    <div class="flex gap-2">
+                    <div class="flex gap-1 sm:gap-2">
                       <button 
                         v-if="parcela.status_pagamento === 'pendente'"
                         @click="marcarComoPago(parcela.id)"
-                        class="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center justify-center transition-colors"
+                        class="p-1.5 sm:p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-md sm:rounded-lg flex items-center justify-center transition-colors min-w-[32px] h-8"
                         title="Marcar como pago"
                       >
                         <font-awesome-icon icon="check" class="text-xs" />
@@ -697,14 +697,14 @@ onMounted(async () => {
                       <button 
                         v-else
                         @click="estornarPagamento(parcela.id)"
-                        class="p-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg flex items-center justify-center transition-colors"
+                        class="p-1.5 sm:p-2 bg-amber-500 hover:bg-amber-600 text-white rounded-md sm:rounded-lg flex items-center justify-center transition-colors min-w-[32px] h-8"
                         title="Estornar pagamento"
                       >
                         <font-awesome-icon icon="undo-alt" class="text-xs" />
                       </button>
                       <button 
                         @click="transacaoParaExcluir = parcela; showConfirmDeleteModal = true"
-                        class="px-2 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center transition-colors text-xs"
+                        class="p-1.5 sm:p-2 bg-red-500 hover:bg-red-600 text-white rounded-md sm:rounded-lg flex items-center justify-center transition-colors text-xs min-w-[32px] h-8"
                         title="Excluir parcela"
                       >
                         <font-awesome-icon icon="trash-alt" class="text-xs" />
@@ -718,8 +718,8 @@ onMounted(async () => {
 
           <!-- Transação individual -->
           <div v-else class="p-3 sm:p-5 hover:bg-muted/50 group">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3 sm:gap-4 flex-1">
+            <div class="flex items-start sm:items-center justify-between gap-3">
+              <div class="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
                 <div 
                   :class="[
                     'w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-md flex-shrink-0',
@@ -734,11 +734,11 @@ onMounted(async () => {
                   />
                 </div>
                 <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2 mb-1">
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
                     <p class="font-semibold text-foreground text-sm sm:text-base truncate">{{ item.descricao }}</p>
                     <span 
                       :class="[
-                        'px-2 py-1 rounded-full text-xs font-medium',
+                        'px-2 py-1 rounded-full text-xs font-medium w-fit flex-shrink-0',
                         item.tipo === 'entrada' ? 'bg-green-100 text-green-800' :
                         item.tipo === 'dizimo' ? 'bg-emerald-100 text-emerald-800' : 
                         item.status_pagamento === 'pago' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
@@ -749,13 +749,13 @@ onMounted(async () => {
                          item.status_pagamento === 'pago' ? 'Pago' : 'Pendente' }}
                     </span>
                   </div>
-                  <div class="flex items-center gap-2 text-xs text-gray-400">
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-card-foreground">
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs text-gray-400">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-card-foreground w-fit">
                       {{ item.categoria?.nome }}
                     </span>
                     <span v-if="item.data_vencimento && item.tipo === 'saida'" 
                           :class="[
-                            'flex items-center gap-1',
+                            'flex items-center gap-1 w-fit',
                             new Date(item.data_vencimento) < new Date() && item.status_pagamento === 'pendente' ? 'text-red-400' :
                             new Date(item.data_vencimento).toDateString() === new Date().toDateString() && item.status_pagamento === 'pendente' ? 'text-amber-400' :
                             'text-gray-400'
@@ -765,16 +765,18 @@ onMounted(async () => {
                   </div>
                   
                   <!-- Observações -->
-                  <div v-if="item.observacoes" class="text-xs text-gray-500 mt-1 italic">
+                  <div v-if="item.observacoes" class="text-xs text-gray-500 mt-1 italic line-clamp-2 sm:line-clamp-none">
                     "{{ item.observacoes }}"
                   </div>
                 </div>
               </div>
-              <div class="text-right flex items-center gap-3">
-                <div>
+              <!-- Layout responsivo para valor e botões -->
+              <div class="flex flex-col items-end gap-2 flex-shrink-0">
+                <!-- Valor -->
+                <div class="text-right">
                   <p 
                     :class="[
-                      'text-lg sm:text-xl font-bold',
+                      'text-base sm:text-lg lg:text-xl font-bold',
                       item.tipo === 'entrada' ? 'text-green-600' : 
                       item.tipo === 'dizimo' ? 'text-emerald-600' : 'text-red-600'
                     ]"
@@ -787,13 +789,13 @@ onMounted(async () => {
                 </div>
 
                 <!-- Botões de ação -->
-                <div class="flex gap-2">
+                <div class="flex gap-1 sm:gap-2">
                   <!-- Botões específicos para despesas -->
                   <template v-if="item.tipo === 'saida'">
                     <button
                       v-if="item.status_pagamento === 'pendente'"
                       @click="marcarComoPago(item.id)"
-                      class="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center justify-center transition-colors"
+                      class="p-1.5 sm:p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-md sm:rounded-lg flex items-center justify-center transition-colors min-w-[32px] h-8"
                       title="Marcar como pago"
                     >
                       <font-awesome-icon icon="check" class="text-xs" />
@@ -801,7 +803,7 @@ onMounted(async () => {
                     <button
                       v-else
                       @click="estornarPagamento(item.id)"
-                      class="p-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg flex items-center justify-center transition-colors"
+                      class="p-1.5 sm:p-2 bg-amber-500 hover:bg-amber-600 text-white rounded-md sm:rounded-lg flex items-center justify-center transition-colors min-w-[32px] h-8"
                       title="Estornar pagamento"
                     >
                       <font-awesome-icon icon="undo-alt" class="text-xs" />
@@ -811,7 +813,7 @@ onMounted(async () => {
                   <!-- Botão de excluir para todas as transações - SEMPRE VISÍVEL -->
                   <button
                     @click="confirmarExclusao(item)"
-                    class="px-2 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center transition-colors text-xs"
+                    class="p-1.5 sm:p-2 bg-red-500 hover:bg-red-600 text-white rounded-md sm:rounded-lg flex items-center justify-center transition-colors text-xs min-w-[32px] h-8"
                     :title="`Excluir ${item.tipo === 'entrada' ? 'receita' : item.tipo === 'dizimo' ? 'dízimo' : 'despesa'}`"
                   >
                     <font-awesome-icon icon="trash-alt" class="text-xs" />
