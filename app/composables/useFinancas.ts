@@ -126,6 +126,12 @@ export function useFinancas() {
       clearError()
       isLoading.value = true
       
+      // Obter usuário atual da sessão
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        throw new Error('Usuário não autenticado')
+      }
+      
       // Calcular o dízimo (10% do valor)
       const valorDizimo = transacao.valor * 0.1
       
@@ -133,6 +139,7 @@ export function useFinancas() {
       const { data: entradaData, error: entradaError } = await supabase
         .from('transacoes_financeiras')
         .insert([{
+          usuario_id: user.id,
           tipo: transacao.tipo,
           categoria_id: transacao.categoria,
           descricao: transacao.descricao,
@@ -172,6 +179,7 @@ export function useFinancas() {
         const { data: dizimoData, error: dizimoError } = await supabase
           .from('transacoes_financeiras')
           .insert([{
+            usuario_id: user.id,
             tipo: 'dizimo',
             categoria_id: categoriaDizimo.id,
             descricao: `Dízimo - ${transacao.descricao}`,
@@ -210,9 +218,16 @@ export function useFinancas() {
       clearError()
       isLoading.value = true
       
+      // Obter usuário atual da sessão
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        throw new Error('Usuário não autenticado')
+      }
+      
       const { data, error } = await supabase
         .from('transacoes_financeiras')
         .insert([{
+          usuario_id: user.id,
           tipo: 'saida',
           categoria_id: despesa.categoria,
           descricao: despesa.descricao,
@@ -314,6 +329,7 @@ export function useFinancas() {
     return transacoes.value.filter(t => 
       t.tipo === 'saida' && 
       t.data_vencimento && 
+      hoje && 
       t.data_vencimento < hoje
     )
   })
@@ -323,6 +339,7 @@ export function useFinancas() {
     return transacoes.value.filter(t => 
       t.tipo === 'saida' && 
       t.data_vencimento && 
+      hoje &&
       t.data_vencimento === hoje
     )
   })
@@ -351,9 +368,16 @@ export function useFinancas() {
 
   // Criar despesa única
   const criarDespesaUnica = async (despesa: any) => {
+    // Obter usuário atual da sessão
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      throw new Error('Usuário não autenticado')
+    }
+    
     const { data, error } = await supabase
       .from('transacoes_financeiras')
       .insert([{
+        usuario_id: user.id,
         tipo: 'saida',
         categoria_id: despesa.categoria,
         descricao: despesa.descricao,
@@ -377,6 +401,12 @@ export function useFinancas() {
 
   // Criar despesa parcelada
   const criarDespesaParcelada = async (despesa: any) => {
+    // Obter usuário atual da sessão
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      throw new Error('Usuário não autenticado')
+    }
+    
     const valorParcela = despesa.valor / despesa.total_parcelas
     const dataBase = new Date(despesa.data_vencimento)
     const despesasParceladas = []
@@ -386,6 +416,7 @@ export function useFinancas() {
       dataVencimento.setMonth(dataBase.getMonth() + (i - 1))
       
       const despesaParcela = {
+        usuario_id: user.id,
         tipo: 'saida',
         categoria_id: despesa.categoria,
         descricao: `${despesa.descricao} (${i}/${despesa.total_parcelas})`,
@@ -419,9 +450,16 @@ export function useFinancas() {
 
   // Criar despesa recorrente (apenas a primeira ocorrência)
   const criarDespesaRecorrente = async (despesa: any) => {
+    // Obter usuário atual da sessão
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      throw new Error('Usuário não autenticado')
+    }
+    
     const { data, error } = await supabase
       .from('transacoes_financeiras')
       .insert([{
+        usuario_id: user.id,
         tipo: 'saida',
         categoria_id: despesa.categoria,
         descricao: `${despesa.descricao} (Recorrente - ${despesa.frequencia_recorrencia})`,
