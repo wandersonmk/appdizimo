@@ -69,6 +69,21 @@
             </NuxtLink>
           </li>
 
+          <!-- Chat IA -->
+          <li>
+            <NuxtLink 
+              to="/chat-ia"
+              class="flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-muted group relative"
+              :class="$route.path === '/chat-ia' ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:text-foreground'"
+            >
+              <font-awesome-icon 
+                icon="robot" 
+                class="w-5 h-5 mr-3" 
+              />
+              <span>Chat IA</span>
+            </NuxtLink>
+          </li>
+
           <!-- Configurações -->
           <li>
             <NuxtLink 
@@ -211,6 +226,22 @@
                 class="w-5 h-5 mr-3" 
               />
               <span>Relatórios</span>
+            </NuxtLink>
+          </li>
+
+          <!-- Chat IA -->
+          <li>
+            <NuxtLink 
+              to="/chat-ia"
+              @click="$emit('close-mobile')"
+              class="flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-muted group relative"
+              :class="$route.path === '/chat-ia' ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:text-foreground'"
+            >
+              <font-awesome-icon 
+                icon="robot" 
+                class="w-5 h-5 mr-3" 
+              />
+              <span>Chat IA</span>
             </NuxtLink>
           </li>
 
