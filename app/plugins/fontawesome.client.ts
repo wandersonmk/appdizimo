@@ -43,7 +43,11 @@ import {
   faChevronDown,
   faUndoAlt,
   faCheck,
-  faCircle
+  faCircle,
+  faSpinner,
+  faInbox,
+  faHeart,
+  faBriefcase
 } from '@fortawesome/free-solid-svg-icons'
 
 // This is important, we are going to let Nuxt worry about the CSS
@@ -94,7 +98,11 @@ library.add(
   faChevronDown,
   faUndoAlt,
   faCheck,
-  faCircle
+  faCircle,
+  faSpinner,
+  faInbox,
+  faHeart,
+  faBriefcase
 )
 
 export default defineNuxtPlugin((nuxtApp) => {

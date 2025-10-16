@@ -64,6 +64,42 @@
       </div>
     </div>
 
+    <!-- Botões de Exportação -->
+    <div class="bg-card rounded-lg border border-border p-4">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-lg font-semibold text-foreground">Exportar Relatório</h3>
+          <p class="text-sm text-muted-foreground">Baixe seus dados em diferentes formatos</p>
+        </div>
+        <div class="flex items-center space-x-3">
+          <button
+            @click="exportarParaPDF"
+            :disabled="isExporting"
+            class="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg transition-colors text-sm font-medium"
+          >
+            <font-awesome-icon 
+              :icon="isExporting ? 'spinner' : 'file-pdf'" 
+              :class="{ 'animate-spin': isExporting }"
+              class="w-4 h-4" 
+            />
+            <span>PDF</span>
+          </button>
+          <button
+            @click="exportarParaExcel"
+            :disabled="isExporting"
+            class="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-lg transition-colors text-sm font-medium"
+          >
+            <font-awesome-icon 
+              :icon="isExporting ? 'spinner' : 'file-excel'" 
+              :class="{ 'animate-spin': isExporting }"
+              class="w-4 h-4" 
+            />
+            <span>Excel</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Filtros -->
     <div class="bg-card rounded-lg border border-border p-4">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -199,6 +235,8 @@ const filtros = ref({
   dataFinal: '',
   tipo: ''
 })
+
+const isExporting = ref(false)
 
 // Computeds
 const totais = computed(() => {
@@ -338,6 +376,199 @@ const getStatusNome = (status: string) => {
       return 'Vencido'
     default:
       return status || 'Indefinido'
+  }
+}
+
+// Funções de Exportação
+const exportarParaPDF = async () => {
+  if (isExporting.value) return
+  
+  try {
+    isExporting.value = true
+    console.log('🔄 Iniciando exportação PDF...')
+    
+    // Verificar se existem dados para exportar
+    if (!relatoriosFiltrados.value || relatoriosFiltrados.value.length === 0) {
+      alert('Nenhum dado encontrado para exportação')
+      return
+    }
+    
+    console.log('📊 Dados encontrados:', relatoriosFiltrados.value.length, 'transações')
+    
+    // Importação mais simples - sem autotable
+    console.log('📚 Carregando jsPDF...')
+    const { default: jsPDF } = await import('jspdf')
+    
+    console.log('✅ jsPDF carregado')
+    
+    // Criar documento PDF simples
+    const doc = new jsPDF()
+    
+    console.log('📄 Documento PDF criado')
+    
+    // Cabeçalho simples
+    doc.setFontSize(20)
+    doc.text('Relatório Financeiro', 20, 30)
+    
+    doc.setFontSize(12)
+    const dataAtual = new Date().toLocaleDateString('pt-BR')
+    doc.text(`Gerado em: ${dataAtual}`, 20, 45)
+    
+    // Resumo financeiro
+    doc.setFontSize(16)
+    doc.text('Resumo Financeiro:', 20, 65)
+    
+    let yPos = 85
+    doc.setFontSize(12)
+    
+    // Lista simples do resumo
+    doc.text(`Entradas: ${formatarMoeda(totais.value.entradas)}`, 20, yPos)
+    yPos += 10
+    doc.text(`Saídas: ${formatarMoeda(totais.value.saidas)}`, 20, yPos)
+    yPos += 10
+    doc.text(`Dízimos: ${formatarMoeda(totais.value.dizimos)}`, 20, yPos)
+    yPos += 10
+    doc.text(`Saldo: ${formatarMoeda(totais.value.saldo)}`, 20, yPos)
+    yPos += 20
+    
+    // Lista de transações
+    doc.setFontSize(16)
+    doc.text('Transações:', 20, yPos)
+    yPos += 15
+    
+    doc.setFontSize(10)
+    
+    // Listar no máximo 15 transações para caber na página
+    const maxTransacoes = Math.min(relatoriosFiltrados.value.length, 15)
+    
+    for (let i = 0; i < maxTransacoes; i++) {
+      const relatorio = relatoriosFiltrados.value[i]
+      
+      const linha = `${formatarData(relatorio.data)} | ${getTipoNome(relatorio.tipo)} | ${relatorio.categoria_nome} | ${formatarMoeda(relatorio.valor)}`
+      
+      doc.text(linha, 20, yPos)
+      yPos += 8
+      
+      // Nova página se necessário
+      if (yPos > 270) {
+        doc.addPage()
+        yPos = 20
+      }
+    }
+    
+    // Nota se há mais transações
+    if (relatoriosFiltrados.value.length > maxTransacoes) {
+      yPos += 10
+      doc.text(`... e mais ${relatoriosFiltrados.value.length - maxTransacoes} transação(ões)`, 20, yPos)
+    }
+    
+    // Salvar PDF
+    console.log('💾 Salvando PDF...')
+    const nomeArquivo = `relatorio-financeiro-${new Date().toISOString().split('T')[0]}.pdf`
+    doc.save(nomeArquivo)
+    
+    console.log('✅ PDF gerado com sucesso:', nomeArquivo)
+    
+  } catch (error) {
+    console.error('❌ Erro detalhado ao exportar PDF:', error)
+    console.error('Stack trace:', (error as Error).stack)
+    
+    let mensagemErro = 'Erro desconhecido ao gerar PDF'
+    
+    if (error instanceof Error) {
+      mensagemErro = error.message
+    }
+    
+    alert(`Erro ao gerar PDF: ${mensagemErro}`)
+  } finally {
+    isExporting.value = false
+    console.log('🏁 Finalizando exportação PDF')
+  }
+}
+
+const exportarParaExcel = async () => {
+  if (isExporting.value) return
+  
+  try {
+    isExporting.value = true
+    
+    // Importação dinâmica para evitar erro SSR
+    const XLSX = await import('xlsx')
+    const { saveAs } = await import('file-saver')
+    
+    // Criar workbook
+    const wb = XLSX.utils.book_new()
+    
+    // Aba 1: Resumo
+    const resumoData = [
+      ['RELATÓRIO FINANCEIRO'],
+      [''],
+      ['Gerado em:', new Date().toLocaleDateString('pt-BR')],
+      [''],
+      ['RESUMO FINANCEIRO'],
+      ['Tipo', 'Valor'],
+      ['Entradas', totais.value.entradas],
+      ['Saídas', totais.value.saidas],
+      ['Dízimos', totais.value.dizimos],
+      ['Saldo', totais.value.saldo]
+    ]
+    
+    const wsResumo = XLSX.utils.aoa_to_sheet(resumoData)
+    
+    // Formatação do resumo
+    wsResumo['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }, // Título
+      { s: { r: 4, c: 0 }, e: { r: 4, c: 1 } }  // Subtítulo
+    ]
+    
+    XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo')
+    
+    // Aba 2: Transações
+    const transacoesData = [
+      ['Data', 'Tipo', 'Categoria', 'Descrição', 'Valor', 'Status', 'Data Vencimento', 'Observações']
+    ]
+    
+    relatoriosFiltrados.value.forEach(relatorio => {
+      transacoesData.push([
+        formatarData(relatorio.data),
+        getTipoNome(relatorio.tipo),
+        relatorio.categoria_nome,
+        relatorio.descricao,
+        relatorio.valor,
+        getStatusNome(relatorio.status_pagamento),
+        relatorio.data_vencimento ? formatarData(relatorio.data_vencimento) : '',
+        relatorio.observacoes || ''
+      ])
+    })
+    
+    const wsTransacoes = XLSX.utils.aoa_to_sheet(transacoesData)
+    
+    // Ajustar largura das colunas
+    wsTransacoes['!cols'] = [
+      { wch: 12 }, // Data
+      { wch: 10 }, // Tipo
+      { wch: 15 }, // Categoria
+      { wch: 30 }, // Descrição
+      { wch: 12 }, // Valor
+      { wch: 12 }, // Status
+      { wch: 15 }, // Data Vencimento
+      { wch: 25 }  // Observações
+    ]
+    
+    XLSX.utils.book_append_sheet(wb, wsTransacoes, 'Transações')
+    
+    // Salvar arquivo
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    
+    const nomeArquivo = `relatorio-financeiro-${new Date().toISOString().split('T')[0]}.xlsx`
+    saveAs(blob, nomeArquivo)
+    
+  } catch (error) {
+    console.error('Erro ao exportar Excel:', error)
+    alert('Erro ao gerar Excel. Tente novamente.')
+  } finally {
+    isExporting.value = false
   }
 }
 

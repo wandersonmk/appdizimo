@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Exportação PDF</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <h1>Teste de Exportação PDF</h1>
+    <button onclick="testarPDF()">Gerar PDF Teste</button>
+    
+    <script>
+        async function testarPDF() {
+            try {
+                console.log('🔄 Iniciando teste PDF...')
+                
+                // Criar documento PDF
+                const { jsPDF } = window.jspdf
+                const doc = new jsPDF()
+                
+                console.log('✅ jsPDF carregado')
+                
+                // Adicionar texto simples
+                doc.setFontSize(18)
+                doc.text('Teste de PDF', 20, 30)
+                
+                doc.setFontSize(12)
+                doc.text('Este é um teste simples de geração de PDF', 20, 50)
+                doc.text('Data: ' + new Date().toLocaleDateString('pt-BR'), 20, 70)
+                
+                // Adicionar uma tabela simples
+                doc.text('Resumo:', 20, 100)
+                
+                // Cabeçalho da tabela
+                doc.setFillColor(59, 130, 246)
+                doc.rect(20, 110, 80, 10, 'F')
+                doc.rect(100, 110, 80, 10, 'F')
+                
+                doc.setTextColor(255, 255, 255)
+                doc.text('Tipo', 25, 118)
+                doc.text('Valor', 105, 118)
+                
+                // Dados da tabela
+                doc.setTextColor(0, 0, 0)
+                doc.setFillColor(245, 245, 245)
+                
+                const dados = [
+                    ['Entradas', 'R$ 1.000,00'],
+                    ['Saídas', 'R$ 500,00'],
+                    ['Saldo', 'R$ 500,00']
+                ]
+                
+                let yPos = 120
+                dados.forEach((linha, index) => {
+                    if (index % 2 === 0) {
+                        doc.setFillColor(245, 245, 245)
+                    } else {
+                        doc.setFillColor(255, 255, 255)
+                    }
+                    
+                    doc.rect(20, yPos, 80, 10, 'F')
+                    doc.rect(100, yPos, 80, 10, 'F')
+                    
+                    doc.text(linha[0], 25, yPos + 8)
+                    doc.text(linha[1], 105, yPos + 8)
+                    
+                    yPos += 10
+                })
+                
+                // Salvar
+                doc.save('teste-pdf.pdf')
+                console.log('✅ PDF salvo com sucesso!')
+                
+            } catch (error) {
+                console.error('❌ Erro no teste:', error)
+                alert('Erro: ' + error.message)
+            }
+        }
+    </script>
+</body>
+</html>
