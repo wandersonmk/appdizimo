@@ -1,7 +1,7 @@
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event)
-    const { message } = body
+    const { message, userId } = body
 
     if (!message) {
       throw createError({
@@ -9,6 +9,8 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Mensagem é obrigatória'
       })
     }
+
+    // O endpoint de chat não deve interceptar análise de gastos - isso é feito no componente
 
     // Token OpenAI vindo das variáveis de ambiente
     const openaiToken = process.env.OPENAI_API_TOKEN

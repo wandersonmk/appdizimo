@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste Relatórios - AppDizimo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8fafc;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status {
+            background: #e0f2fe;
+            border: 1px solid #0277bd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .success {
+            background: #e8f5e8;
+            border-color: #2e7d32;
+            color: #2e7d32;
+        }
+        .feature {
+            background: white;
+            border: 1px solid #e0e7ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .feature h3 {
+            margin: 0 0 10px 0;
+            color: #1e40af;
+        }
+        .data-preview {
+            background: #f1f5f9;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        .badge-entrada { background: #dcfce7; color: #166534; }
+        .badge-saida { background: #fee2e2; color: #dc2626; }
+        .badge-dizimo { background: #f3e8ff; color: #7c3aed; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Teste - Sistema de Relatórios AppDizimo</h1>
+        <p>Verificação do sistema de relatórios financeiros implementado</p>
+    </div>
+
+    <div class="status success">
+        <h2>✅ Sistema de Relatórios Implementado com Sucesso!</h2>
+        <p>A página de relatórios foi completamente redesenhada para trabalhar com dados financeiros reais do banco Supabase.</p>
+    </div>
+
+    <div class="feature">
+        <h3>🔄 Composable useRelatorios.ts Atualizado</h3>
+        <p><strong>Funcionalidade:</strong> Busca transações financeiras do usuário logado com categorias</p>
+        <p><strong>Dados:</strong> Integração com tabelas transacoes_financeiras e categorias_financeiras</p>
+        <div class="data-preview">
+interface RelatorioFinanceiro {
+  id: string
+  usuario_id: string
+  tipo: 'entrada' | 'saida' | 'dizimo'
+  categoria_nome: string
+  categoria_cor: string
+  categoria_icone: string
+  descricao: string
+  valor: number
+  data: string
+  status_pagamento: string
+  // ... outros campos
+}
+        </div>
+    </div>
+
+    <div class="feature">
+        <h3>📋 Novo Componente RelatoriosFinanceiros.vue</h3>
+        <p><strong>Recursos Implementados:</strong></p>
+        <ul>
+            <li>📊 Resumo financeiro com totais (Entradas, Saídas, Dízimos, Saldo)</li>
+            <li>🔍 Filtros por data inicial/final e tipo de transação</li>
+            <li>📑 Tabela responsiva com todas as transações</li>
+            <li>🎨 Indicadores visuais coloridos por categoria</li>
+            <li>💰 Formatação de valores em Real (R$)</li>
+            <li>📅 Formatação de datas brasileira</li>
+            <li>🏷️ Badges de status de pagamento</li>
+        </ul>
+    </div>
+
+    <div class="feature">
+        <h3>🗃️ Dados Reais do Banco</h3>
+        <p><strong>Transações Encontradas:</strong> 4 registros</p>
+        <div class="data-preview">
+Exemplos dos dados:
+• <span class="badge badge-entrada">ENTRADA</span> Recebimento suporte Estilo Ar - R$ 693,91
+• <span class="badge badge-dizimo">DÍZIMO</span> Dízimo - Recebimento suporte Estilo Ar - R$ 69,39
+• <span class="badge badge-entrada">ENTRADA</span> Atualizei sistema de chatwoot - R$ 150,00
+• <span class="badge badge-dizimo">DÍZIMO</span> Dízimo - Atualizei sistema de chatwoot - R$ 15,00
+
+Categorias vinculadas:
+• Serviços (azul) - briefcase
+• Dízimo (verde) - church
+        </div>
+    </div>
+
+    <div class="feature">
+        <h3>📄 Página /relatorios Atualizada</h3>
+        <p><strong>Melhorias:</strong></p>
+        <ul>
+            <li>✅ Removida dependência da tabela "relatorios" inexistente</li>
+            <li>✅ Implementado carregamento com dados reais de transações</li>
+            <li>✅ Estados de loading e erro melhorados</li>
+            <li>✅ Componente RelatoriosFinanceiros integrado</li>
+        </ul>
+    </div>
+
+    <div class="feature">
+        <h3>🚀 Próximos Passos</h3>
+        <p><strong>Sistema pronto para uso!</strong> A página de relatórios agora:</p>
+        <ul>
+            <li>📈 Mostra resumo financeiro em tempo real</li>
+            <li>🔍 Permite filtrar transações por período e tipo</li>
+            <li>📊 Apresenta dados organizados e categorizados</li>
+            <li>💯 Funciona com autenticação de usuários</li>
+        </ul>
+    </div>
+
+    <div class="status">
+        <h2>🎯 Como Testar</h2>
+        <ol>
+            <li>Acesse <strong>/relatorios</strong> após fazer login</li>
+            <li>Veja o resumo financeiro no topo da página</li>
+            <li>Use os filtros para filtrar por data ou tipo</li>
+            <li>Observe a tabela com todas as transações</li>
+            <li>Verifique cores das categorias e formatação</li>
+        </ol>
+    </div>
+</body>
+</html>

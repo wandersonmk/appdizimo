@@ -148,7 +148,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, computed } from 'vue'
 
 // Interface para mensagens
 interface Message {
@@ -157,6 +157,33 @@ interface Message {
   sender: 'user' | 'ai'
   timestamp: Date
 }
+
+// Função para verificar se é análise de gastos
+const isAnaliseGastosMessage = (message: string): boolean => {
+  const normalizedMessage = message.toLowerCase().trim()
+  
+  const keywords = [
+    'analisar gastos',
+    'analisar meus gastos', 
+    'analyse gastos',
+    'análise gastos',
+    'análise dos gastos',
+    'análise dos meus gastos',
+    'gastos mensais',
+    'meus gastos',
+    'onde gasto',
+    'onde estou gastando',
+    'resumo gastos',
+    'relatório gastos',
+    'despesas mensais',
+    'me traga minhas despesas'
+  ]
+  
+  return keywords.some(keyword => normalizedMessage.includes(keyword))
+}
+
+// Usuário logado - usando ID com transações reais para demonstração
+const userId = ref('2049a159-0a39-4c4a-9d12-4ca5af6a27e6')
 
 // Estados do componente
 const newMessage = ref('')
@@ -214,30 +241,84 @@ const sendMessage = async () => {
   isLoading.value = true
   
   try {
-    // Fazer requisição para API
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: messageText
-      })
-    })
+    // Verificar se é uma solicitação de análise de gastos
+    console.log('🔍 Verificando se é análise de gastos:', messageText)
+    console.log('🎯 É análise de gastos:', isAnaliseGastosMessage(messageText))
+    
+    if (isAnaliseGastosMessage(messageText)) {
+      console.log('💰 Chamando endpoint de análise de gastos...')
+      // Fazer diretamente a análise de gastos
+      try {
+        console.log('📤 Enviando para:', '/api/analisar-gastos', {
+          message: messageText,
+          userId: userId.value
+        })
 
-    const data = await response.json() as { success: boolean; response: string }
+        const analiseResponse = await fetch('/api/analisar-gastos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: messageText,
+            userId: userId.value
+          })
+        })
 
-    if (data.success) {
-      const aiMessage: Message = {
-        id: messageIdCounter++,
-        text: data.response,
-        sender: 'ai',
-        timestamp: new Date()
+        console.log('📥 Status da resposta:', analiseResponse.status)
+        const analiseData = await analiseResponse.json() as { success: boolean; response: string; dadosFinanceiros?: any }
+        console.log('📊 Dados recebidos:', analiseData)
+
+        if (analiseData.success) {
+          const analiseMessage: Message = {
+            id: messageIdCounter++,
+            text: analiseData.response,
+            sender: 'ai',
+            timestamp: new Date()
+          }
+          
+          messages.value.push(analiseMessage)
+        } else {
+          throw new Error('Erro na análise de gastos')
+        }
+      } catch (analiseError) {
+        console.error('Erro na análise de gastos:', analiseError)
+        const errorMessage: Message = {
+          id: messageIdCounter++,
+          text: '💸 Desculpe, não consegui analisar seus gastos no momento. Verifique se você possui transações registradas no sistema e tente novamente.',
+          sender: 'ai',
+          timestamp: new Date()
+        }
+        messages.value.push(errorMessage)
       }
-      
-      messages.value.push(aiMessage)
     } else {
-      throw new Error('Resposta inválida da API')
+      console.log('💬 Mensagem normal, chamando endpoint de chat...')
+      // Fazer requisição normal para chat
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: messageText,
+          userId: userId.value
+        })
+      })
+
+      const data = await response.json() as { success: boolean; response: string }
+
+      if (data.success) {
+        const aiMessage: Message = {
+          id: messageIdCounter++,
+          text: data.response,
+          sender: 'ai',
+          timestamp: new Date()
+        }
+        
+        messages.value.push(aiMessage)
+      } else {
+        throw new Error('Resposta inválida da API')
+      }
     }
     
   } catch (error: any) {

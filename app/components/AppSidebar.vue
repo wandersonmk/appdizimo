@@ -69,8 +69,8 @@
             </NuxtLink>
           </li>
 
-          <!-- Chat IA -->
-          <li>
+          <!-- Chat IA - Oculto temporariamente -->
+          <li v-if="false">
             <NuxtLink 
               to="/chat-ia"
               class="flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-muted group relative"
@@ -229,8 +229,8 @@
             </NuxtLink>
           </li>
 
-          <!-- Chat IA -->
-          <li>
+          <!-- Chat IA - Oculto temporariamente -->
+          <li v-if="false">
             <NuxtLink 
               to="/chat-ia"
               @click="$emit('close-mobile')"
