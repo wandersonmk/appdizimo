@@ -162,55 +162,128 @@
               <th class="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Descrição</th>
               <th class="text-right py-3 px-4 font-medium text-muted-foreground text-sm">Valor</th>
               <th class="text-center py-3 px-4 font-medium text-muted-foreground text-sm">Status</th>
+              <th class="text-center py-3 px-4 font-medium text-muted-foreground text-sm w-12"></th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="relatoriosFiltrados.length === 0">
-              <td colspan="6" class="py-8 text-center text-muted-foreground">
+              <td colspan="7" class="py-8 text-center text-muted-foreground">
                 <div class="flex flex-col items-center">
                   <font-awesome-icon icon="inbox" class="w-8 h-8 mb-2 text-muted-foreground/50" />
                   <p>Nenhuma transação encontrada</p>
                 </div>
               </td>
             </tr>
-            <tr 
-              v-for="relatorio in relatoriosFiltrados" 
-              :key="relatorio.id"
-              class="border-b border-border/50 hover:bg-muted/30 transition-colors"
-            >
-              <td class="py-3 px-4 text-sm text-foreground">
-                {{ formatarData(relatorio.data) }}
-              </td>
-              <td class="py-3 px-4">
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                      :class="getTipoClasses(relatorio.tipo)">
-                  <font-awesome-icon 
-                    :icon="getTipoIcon(relatorio.tipo)" 
-                    class="w-3 h-3 mr-1" 
-                  />
-                  {{ getTipoNome(relatorio.tipo) }}
-                </span>
-              </td>
-              <td class="py-3 px-4">
-                <div class="flex items-center">
-                  <div class="w-3 h-3 rounded-full mr-2" :style="{ backgroundColor: relatorio.categoria_cor }"></div>
-                  <span class="text-sm text-foreground">{{ relatorio.categoria_nome }}</span>
-                </div>
-              </td>
-              <td class="py-3 px-4 text-sm text-foreground">
-                {{ relatorio.descricao }}
-              </td>
-              <td class="py-3 px-4 text-right text-sm font-medium"
-                  :class="getValorClasses(relatorio.tipo)">
-                {{ formatarMoeda(relatorio.valor) }}
-              </td>
-              <td class="py-3 px-4 text-center">
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                      :class="getStatusClasses(relatorio.status_pagamento)">
-                  {{ getStatusNome(relatorio.status_pagamento) }}
-                </span>
-              </td>
-            </tr>
+            
+            <template v-for="relatorio in relatoriosFiltrados" :key="relatorio.id">
+              <!-- Grupo de Despesas Parceladas -->
+              <tr v-if="relatorio.isGrupo" class="border-b border-border/50 bg-purple-50/30 dark:bg-purple-900/10 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-colors">
+                <td class="py-3 px-4 text-sm text-foreground">
+                  <span v-if="relatorio.proximoVencimento">{{ formatarData(relatorio.proximoVencimento) }}</span>
+                  <span v-else class="text-muted-foreground">—</span>
+                </td>
+                <td class="py-3 px-4">
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                    <font-awesome-icon icon="credit-card" class="w-3 h-3 mr-1" />
+                    Parcelada
+                  </span>
+                </td>
+                <td class="py-3 px-4">
+                  <div class="flex items-center">
+                    <div class="w-3 h-3 rounded-full mr-2" :style="{ backgroundColor: relatorio.categoria_cor }"></div>
+                    <span class="text-sm text-foreground">{{ relatorio.categoria_nome }}</span>
+                  </div>
+                </td>
+                <td class="py-3 px-4">
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-foreground">{{ relatorio.descricao }}</span>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+                      {{ relatorio.parcelasPagas }}/{{ relatorio.totalParcelas }}
+                    </span>
+                  </div>
+                </td>
+                <td class="py-3 px-4 text-right text-sm font-bold text-red-600 dark:text-red-400">
+                  {{ formatarMoeda(relatorio.valorTotal) }}
+                </td>
+                <td class="py-3 px-4 text-center">
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                    {{ relatorio.parcelasPagas }}/{{ relatorio.totalParcelas }} pagas
+                  </span>
+                </td>
+                <td class="py-3 px-4 text-center">
+                  <button 
+                    @click="toggleGrupoExpansao(relatorio.id)"
+                    class="p-2 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-colors"
+                    :title="despesasParceladasExpandidas.has(relatorio.id) ? 'Recolher parcelas' : 'Expandir parcelas'"
+                  >
+                    <font-awesome-icon 
+                      :icon="despesasParceladasExpandidas.has(relatorio.id) ? 'chevron-up' : 'chevron-down'" 
+                      class="w-4 h-4 text-purple-600 dark:text-purple-400"
+                    />
+                  </button>
+                </td>
+              </tr>
+              
+              <!-- Parcelas Expandidas (Desktop) -->
+              <tr v-if="relatorio.isGrupo && despesasParceladasExpandidas.has(relatorio.id)" class="bg-muted/20">
+                <td colspan="7" class="p-0">
+                  <div class="ml-8 mr-4 my-3 border-l-2 border-purple-300 dark:border-purple-700 pl-4">
+                    <div v-for="parcela in relatorio.parcelas" :key="parcela.id" class="py-2 px-3 bg-background border border-border rounded-lg mb-2 last:mb-0">
+                      <div class="grid grid-cols-6 gap-4 items-center text-sm">
+                        <div class="text-muted-foreground">{{ formatarData(parcela.data_vencimento || parcela.data) }}</div>
+                        <div class="col-span-2 text-foreground">{{ parcela.descricao }}</div>
+                        <div class="text-right font-medium" :class="getValorClasses(parcela.tipo)">
+                          {{ formatarMoeda(parcela.valor) }}
+                        </div>
+                        <div class="text-center">
+                          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                :class="getStatusClasses(parcela.status_pagamento)">
+                            {{ getStatusNome(parcela.status_pagamento) }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Transação Individual -->
+              <tr v-else-if="!relatorio.isGrupo" class="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                <td class="py-3 px-4 text-sm text-foreground">
+                  {{ formatarData(relatorio.data) }}
+                </td>
+                <td class="py-3 px-4">
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                        :class="getTipoClasses(relatorio.tipo)">
+                    <font-awesome-icon 
+                      :icon="getTipoIcon(relatorio.tipo)" 
+                      class="w-3 h-3 mr-1" 
+                    />
+                    {{ getTipoNome(relatorio.tipo) }}
+                  </span>
+                </td>
+                <td class="py-3 px-4">
+                  <div class="flex items-center">
+                    <div class="w-3 h-3 rounded-full mr-2" :style="{ backgroundColor: relatorio.categoria_cor }"></div>
+                    <span class="text-sm text-foreground">{{ relatorio.categoria_nome }}</span>
+                  </div>
+                </td>
+                <td class="py-3 px-4 text-sm text-foreground">
+                  {{ relatorio.descricao }}
+                </td>
+                <td class="py-3 px-4 text-right text-sm font-medium"
+                    :class="getValorClasses(relatorio.tipo)">
+                  {{ formatarMoeda(relatorio.valor) }}
+                </td>
+                <td class="py-3 px-4 text-center">
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                        :class="getStatusClasses(relatorio.status_pagamento)">
+                    {{ getStatusNome(relatorio.status_pagamento) }}
+                  </span>
+                </td>
+                <td class="py-3 px-4"></td>
+              </tr>
+            </template>
           </tbody>
         </table>
       </div>
@@ -227,43 +300,117 @@
         <div
           v-for="relatorio in relatoriosFiltrados"
           :key="relatorio.id"
-          class="p-4 hover:bg-muted/30 transition-colors"
+          class="transition-colors"
+          :class="relatorio.isGrupo ? 'bg-purple-50/30 dark:bg-purple-900/10' : ''"
         >
-          <!-- Cabeçalho do Card -->
-          <div class="flex items-start justify-between mb-3">
-            <div class="flex items-center space-x-2">
-              <div class="w-2 h-2 rounded-full" :style="{ backgroundColor: relatorio.categoria_cor }"></div>
-              <span class="text-sm font-medium text-foreground">{{ relatorio.categoria_nome }}</span>
+          <!-- Card de Grupo Parcelado -->
+          <div v-if="relatorio.isGrupo" class="p-4">
+            <!-- Cabeçalho do Grupo -->
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center space-x-2 flex-1">
+                <div class="w-2 h-2 rounded-full" :style="{ backgroundColor: relatorio.categoria_cor }"></div>
+                <span class="text-sm font-medium text-foreground">{{ relatorio.categoria_nome }}</span>
+              </div>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                <font-awesome-icon icon="credit-card" class="w-3 h-3 mr-1" />
+                Parcelada
+              </span>
             </div>
-            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                  :class="getTipoClasses(relatorio.tipo)">
+
+            <!-- Descrição e Badge -->
+            <div class="flex items-center gap-2 mb-2">
+              <p class="text-sm text-foreground font-medium flex-1">{{ relatorio.descricao }}</p>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 flex-shrink-0">
+                {{ relatorio.parcelasPagas }}/{{ relatorio.totalParcelas }}
+              </span>
+            </div>
+
+            <!-- Data do Próximo Vencimento -->
+            <div class="flex items-center text-xs text-muted-foreground mb-2">
+              <span v-if="relatorio.proximoVencimento">⏰ Próximo: {{ formatarData(relatorio.proximoVencimento) }}</span>
+              <span v-else>Todas as parcelas pagas</span>
+            </div>
+
+            <!-- Valor Total -->
+            <div class="flex items-center justify-between pt-2 border-t border-border/50 mb-2">
+              <span class="text-xs text-muted-foreground">Valor Total:</span>
+              <span class="text-base font-bold text-red-600 dark:text-red-400">
+                {{ formatarMoeda(relatorio.valorTotal) }}
+              </span>
+            </div>
+
+            <!-- Botão Expandir/Recolher -->
+            <button 
+              @click="toggleGrupoExpansao(relatorio.id)"
+              class="w-full mt-2 py-2 px-3 bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-900/40 text-purple-800 dark:text-purple-300 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+            >
               <font-awesome-icon 
-                :icon="getTipoIcon(relatorio.tipo)" 
-                class="w-3 h-3 mr-1" 
+                :icon="despesasParceladasExpandidas.has(relatorio.id) ? 'chevron-up' : 'chevron-down'" 
               />
-              {{ getTipoNome(relatorio.tipo) }}
-            </span>
+              {{ despesasParceladasExpandidas.has(relatorio.id) ? 'Recolher parcelas' : 'Ver parcelas' }}
+            </button>
+
+            <!-- Parcelas Expandidas (Mobile) -->
+            <div v-if="despesasParceladasExpandidas.has(relatorio.id)" class="mt-3 space-y-2 border-l-2 border-purple-300 dark:border-purple-700 pl-3">
+              <div v-for="parcela in relatorio.parcelas" :key="parcela.id" class="p-3 bg-background border border-border rounded-lg">
+                <div class="flex items-start justify-between mb-2">
+                  <p class="text-sm font-medium text-foreground flex-1">{{ parcela.descricao }}</p>
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ml-2"
+                        :class="getStatusClasses(parcela.status_pagamento)">
+                    {{ getStatusNome(parcela.status_pagamento) }}
+                  </span>
+                </div>
+                <div class="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                  <span>📅 {{ formatarData(parcela.data_vencimento || parcela.data) }}</span>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-border/50">
+                  <span class="text-xs text-muted-foreground">Valor:</span>
+                  <span class="text-sm font-bold" :class="getValorClasses(parcela.tipo)">
+                    {{ formatarMoeda(parcela.valor) }}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <!-- Descrição -->
-          <p class="text-sm text-foreground mb-2 font-medium">{{ relatorio.descricao }}</p>
+          <!-- Card de Transação Individual -->
+          <div v-else class="p-4 hover:bg-muted/30">
+            <!-- Cabeçalho do Card -->
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center space-x-2">
+                <div class="w-2 h-2 rounded-full" :style="{ backgroundColor: relatorio.categoria_cor }"></div>
+                <span class="text-sm font-medium text-foreground">{{ relatorio.categoria_nome }}</span>
+              </div>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                    :class="getTipoClasses(relatorio.tipo)">
+                <font-awesome-icon 
+                  :icon="getTipoIcon(relatorio.tipo)" 
+                  class="w-3 h-3 mr-1" 
+                />
+                {{ getTipoNome(relatorio.tipo) }}
+              </span>
+            </div>
 
-          <!-- Informações -->
-          <div class="flex items-center justify-between text-xs text-muted-foreground mb-2">
-            <span>{{ formatarData(relatorio.data) }}</span>
-            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                  :class="getStatusClasses(relatorio.status_pagamento)">
-              {{ getStatusNome(relatorio.status_pagamento) }}
-            </span>
-          </div>
+            <!-- Descrição -->
+            <p class="text-sm text-foreground mb-2 font-medium">{{ relatorio.descricao }}</p>
 
-          <!-- Valor -->
-          <div class="flex items-center justify-between pt-2 border-t border-border/50">
-            <span class="text-xs text-muted-foreground">Valor:</span>
-            <span class="text-base font-bold"
-                  :class="getValorClasses(relatorio.tipo)">
-              {{ formatarMoeda(relatorio.valor) }}
-            </span>
+            <!-- Informações -->
+            <div class="flex items-center justify-between text-xs text-muted-foreground mb-2">
+              <span>{{ formatarData(relatorio.data) }}</span>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                    :class="getStatusClasses(relatorio.status_pagamento)">
+                {{ getStatusNome(relatorio.status_pagamento) }}
+              </span>
+            </div>
+
+            <!-- Valor -->
+            <div class="flex items-center justify-between pt-2 border-t border-border/50">
+              <span class="text-xs text-muted-foreground">Valor:</span>
+              <span class="text-base font-bold"
+                    :class="getValorClasses(relatorio.tipo)">
+                {{ formatarMoeda(relatorio.valor) }}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -291,6 +438,7 @@ const filtros = ref({
 })
 
 const isExporting = ref(false)
+const despesasParceladasExpandidas = ref<Set<string>>(new Set()) // Para controlar expansão das parcelas
 
 // Computeds
 const totais = computed(() => {
@@ -323,6 +471,68 @@ const totais = computed(() => {
   return totaisCalculados
 })
 
+// Função para agrupar despesas parceladas
+const agruparDespesasParceladas = (transacoes: any[]) => {
+  const grupos: any = {}
+  const transacoesAgrupadas: any[] = []
+  
+  transacoes.forEach(transacao => {
+    // Detecta se é despesa parcelada pelos padrões: "Nome (X/Y)" ou "Nome - Parcela X/Y" ou tipo_despesa = 'parcelada'
+    const isParcelada = transacao.tipo === 'saida' && (
+      transacao.tipo_despesa === 'parcelada' ||
+      /\(\d+\/\d+\)/.test(transacao.descricao) ||
+      /\s*-\s*Parcela\s+\d+\/\d+/.test(transacao.descricao)
+    )
+    
+    if (isParcelada) {
+      // Extrai a descrição base removendo os padrões de parcela
+      let descricaoBase = transacao.descricao
+        .replace(/\s*\(\d+\/\d+\).*$/, '') // Remove "(X/Y)" e tudo após
+        .replace(/\s*-\s*Parcela\s+\d+\/\d+.*$/, '') // Remove "- Parcela X/Y" e tudo após
+        .trim()
+      
+      if (!grupos[descricaoBase]) {
+        grupos[descricaoBase] = {
+          id: `grupo_${descricaoBase.replace(/\s/g, '_')}`,
+          descricao: descricaoBase,
+          tipo: 'saida',
+          tipo_despesa: 'parcelada',
+          isGrupo: true,
+          parcelas: [],
+          totalParcelas: 0,
+          parcelasPagas: 0,
+          valorTotal: 0,
+          proximoVencimento: null,
+          categoria_nome: transacao.categoria_nome,
+          categoria_cor: transacao.categoria_cor
+        }
+        transacoesAgrupadas.push(grupos[descricaoBase])
+      }
+      
+      grupos[descricaoBase].parcelas.push(transacao)
+      grupos[descricaoBase].totalParcelas++
+      grupos[descricaoBase].valorTotal += transacao.valor || 0
+      
+      if (transacao.status_pagamento === 'pago') {
+        grupos[descricaoBase].parcelasPagas++
+      }
+      
+      // Define próximo vencimento (primeira parcela não paga)
+      if (transacao.status_pagamento !== 'pago') {
+        if (!grupos[descricaoBase].proximoVencimento || 
+            new Date(transacao.data_vencimento || transacao.data) < new Date(grupos[descricaoBase].proximoVencimento)) {
+          grupos[descricaoBase].proximoVencimento = transacao.data_vencimento || transacao.data
+        }
+      }
+    } else {
+      // Transações normais (não parceladas)
+      transacoesAgrupadas.push(transacao)
+    }
+  })
+  
+  return transacoesAgrupadas
+}
+
 const relatoriosFiltrados = computed(() => {
   let filtrados = [...props.relatorios]
 
@@ -340,7 +550,11 @@ const relatoriosFiltrados = computed(() => {
     filtrados = filtrados.filter(r => r.data <= filtros.value.dataFinal)
   }
 
-  return filtrados.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
+  // Ordenar por data
+  const ordenados = filtrados.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
+  
+  // Agrupar despesas parceladas
+  return agruparDespesasParceladas(ordenados)
 })
 
 // Métodos
@@ -631,6 +845,15 @@ const limparFiltros = () => {
     dataInicial: '',
     dataFinal: '',
     tipo: ''
+  }
+}
+
+// Função para alternar expansão de grupo
+const toggleGrupoExpansao = (grupoId: string) => {
+  if (despesasParceladasExpandidas.value.has(grupoId)) {
+    despesasParceladasExpandidas.value.delete(grupoId)
+  } else {
+    despesasParceladasExpandidas.value.add(grupoId)
   }
 }
 </script>
