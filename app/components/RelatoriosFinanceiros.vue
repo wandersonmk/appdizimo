@@ -664,7 +664,47 @@ const exportarParaPDF = async () => {
     console.log('📊 Dados encontrados:', relatoriosFiltrados.value.length, 'transações')
     
     const { default: jsPDF } = await import('jspdf')
-    const doc = new jsPDF()
+    
+    // Criar documento
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    })
+    
+    // Função para converter texto para ISO-8859-1 (Latin1) que o jsPDF suporta nativamente
+    const converterParaLatin1 = (texto: string): string => {
+      if (!texto) return ''
+      
+      // Mapa completo de caracteres UTF-8 para Latin1
+      const mapa: { [key: string]: string } = {
+        // Vogais minúsculas acentuadas
+        'á': '\xE1', 'à': '\xE0', 'ã': '\xE3', 'â': '\xE2', 'ä': '\xE4',
+        'é': '\xE9', 'è': '\xE8', 'ê': '\xEA', 'ë': '\xEB',
+        'í': '\xED', 'ì': '\xEC', 'î': '\xEE', 'ï': '\xEF',
+        'ó': '\xF3', 'ò': '\xF2', 'õ': '\xF5', 'ô': '\xF4', 'ö': '\xF6',
+        'ú': '\xFA', 'ù': '\xF9', 'û': '\xFB', 'ü': '\xFC',
+        'ç': '\xE7',
+        
+        // Vogais maiúsculas acentuadas
+        'Á': '\xC1', 'À': '\xC0', 'Ã': '\xC3', 'Â': '\xC2', 'Ä': '\xC4',
+        'É': '\xC9', 'È': '\xC8', 'Ê': '\xCA', 'Ë': '\xCB',
+        'Í': '\xCD', 'Ì': '\xCC', 'Î': '\xCE', 'Ï': '\xCF',
+        'Ó': '\xD3', 'Ò': '\xD2', 'Õ': '\xD5', 'Ô': '\xD4', 'Ö': '\xD6',
+        'Ú': '\xDA', 'Ù': '\xD9', 'Û': '\xDB', 'Ü': '\xDC',
+        'Ç': '\xC7',
+        
+        // Outros caracteres
+        'ñ': '\xF1', 'Ñ': '\xD1',
+        'º': '\xBA', 'ª': '\xAA',
+        '°': '\xB0',
+        
+        // Símbolos de moeda e outros
+        'R$': 'R$'
+      }
+      
+      return texto.split('').map(char => mapa[char] || char).join('')
+    }
     
     // Cores personalizadas
     const colors = {
@@ -690,12 +730,12 @@ const exportarParaPDF = async () => {
       doc.setTextColor(255, 255, 255)
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
-      doc.text('💰 Relatório Financeiro', 20, 10)
+      doc.text(converterParaLatin1('Relatório Financeiro'), 20, 10)
       
       // Número da página (canto direito)
       doc.setFontSize(10)
       doc.setFont('helvetica', 'normal')
-      doc.text(`Página ${numeroPagina}`, 175, 10)
+      doc.text(converterParaLatin1(`Página ${numeroPagina}`), 175, 10)
       
       // Reset cor do texto
       doc.setTextColor(...colors.dark)
@@ -707,8 +747,8 @@ const exportarParaPDF = async () => {
       doc.setTextColor(...colors.muted)
       doc.setFont('helvetica', 'italic')
       const dataGeracao = new Date().toLocaleString('pt-BR')
-      doc.text(`Gerado em: ${dataGeracao}`, 20, 287)
-      doc.text('Sistema de Gestão Financeira', 145, 287)
+      doc.text(converterParaLatin1(`Gerado em: ${dataGeracao}`), 20, 287)
+      doc.text(converterParaLatin1('Sistema de Gestão Financeira'), 145, 287)
     }
     
     // PRIMEIRA PÁGINA - Cabeçalho e Resumo
@@ -742,7 +782,7 @@ const exportarParaPDF = async () => {
       }
       
       if (filtros.value.tipo) {
-        doc.text(`• Tipo: ${getTipoNome(filtros.value.tipo)}`, 25, yPos)
+        doc.text(converterParaLatin1(`• Tipo: ${getTipoNome(filtros.value.tipo)}`), 25, yPos)
         yPos += 5
       }
       
@@ -756,7 +796,7 @@ const exportarParaPDF = async () => {
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
-    doc.text('💼 Resumo Financeiro', 20, yPos + 7)
+    doc.text(converterParaLatin1('Resumo Financeiro'), 20, yPos + 7)
     
     yPos += 18
     
@@ -776,7 +816,7 @@ const exportarParaPDF = async () => {
     doc.setFontSize(9)
     doc.setTextColor(...colors.success)
     doc.setFont('helvetica', 'bold')
-    doc.text('↑ ENTRADAS', xPos + 3, yPos + 6)
+    doc.text(converterParaLatin1('ENTRADAS'), xPos + 3, yPos + 6)
     
     doc.setFontSize(12)
     doc.setTextColor(...colors.dark)
@@ -793,7 +833,7 @@ const exportarParaPDF = async () => {
     doc.setFontSize(9)
     doc.setTextColor(...colors.danger)
     doc.setFont('helvetica', 'bold')
-    doc.text('↓ SAÍDAS', xPos + 3, yPos + 6)
+    doc.text(converterParaLatin1('SAÍDAS'), xPos + 3, yPos + 6)
     
     doc.setFontSize(12)
     doc.setTextColor(...colors.dark)
@@ -810,7 +850,7 @@ const exportarParaPDF = async () => {
     doc.setFontSize(9)
     doc.setTextColor(...colors.purple)
     doc.setFont('helvetica', 'bold')
-    doc.text('♥ DÍZIMOS', xPos + 3, yPos + 6)
+    doc.text(converterParaLatin1('DÍZIMOS'), xPos + 3, yPos + 6)
     
     doc.setFontSize(12)
     doc.setTextColor(...colors.dark)
@@ -845,7 +885,7 @@ const exportarParaPDF = async () => {
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
-    doc.text(`📊 Transações (${relatoriosFiltrados.value.length})`, 20, yPos + 7)
+    doc.text(converterParaLatin1(`Transações (${relatoriosFiltrados.value.length})`), 20, yPos + 7)
     
     yPos += 18
     
@@ -964,21 +1004,21 @@ const exportarParaPDF = async () => {
       }
       
       doc.setTextColor(...corTipo)
-      doc.text(tipoTexto, 40, yPos + 2)
+      doc.text(converterParaLatin1(tipoTexto), 40, yPos + 2)
       doc.setTextColor(...colors.dark)
       
       // Categoria
-      const categoriaTexto = transacao.categoria_nome || '—'
-      doc.text(categoriaTexto.substring(0, 12), 60, yPos + 2)
+      const categoriaTexto = transacao.categoria_nome || '-'
+      doc.text(converterParaLatin1(categoriaTexto.substring(0, 12)), 60, yPos + 2)
       
       // Descrição
       let descricaoTexto = transacao.descricao
       if (transacao.isGrupoCabecalho) {
         descricaoTexto = `${transacao.descricao} (${transacao.parcelasPagas}/${transacao.totalParcelas})`
       } else if (transacao.isParcela) {
-        descricaoTexto = `  └ ${transacao.descricao}`
+        descricaoTexto = `  > ${transacao.descricao}`
       }
-      doc.text(descricaoTexto.substring(0, 35), 90, yPos + 2)
+      doc.text(converterParaLatin1(descricaoTexto.substring(0, 35)), 90, yPos + 2)
       
       // Valor com cor
       const valorTexto = transacao.isGrupoCabecalho 
@@ -1004,7 +1044,7 @@ const exportarParaPDF = async () => {
         else if (transacao.status_pagamento === 'vencido') corStatus = colors.danger
         
         doc.setTextColor(...corStatus)
-        doc.text(statusTexto, 178, yPos + 2)
+        doc.text(converterParaLatin1(statusTexto), 178, yPos + 2)
       }
       
       yPos += 7
