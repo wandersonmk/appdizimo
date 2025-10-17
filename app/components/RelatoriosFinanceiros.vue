@@ -1,61 +1,61 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 md:space-y-6 px-2 md:px-0">
     <!-- Resumo Financeiro -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+      <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 md:p-4">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <font-awesome-icon icon="arrow-up" class="w-5 h-5 text-green-600 dark:text-green-400" />
+            <font-awesome-icon icon="arrow-up" class="w-4 h-4 md:w-5 md:h-5 text-green-600 dark:text-green-400" />
           </div>
-          <div class="ml-3">
-            <p class="text-sm font-medium text-green-900 dark:text-green-100">Entradas</p>
-            <p class="text-lg font-semibold text-green-900 dark:text-green-100">
+          <div class="ml-2 md:ml-3 flex-1 min-w-0">
+            <p class="text-xs md:text-sm font-medium text-green-900 dark:text-green-100">Entradas</p>
+            <p class="text-base md:text-lg font-semibold text-green-900 dark:text-green-100 truncate">
               {{ formatarMoeda(totais.entradas) }}
             </p>
           </div>
         </div>
       </div>
 
-      <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+      <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 md:p-4">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <font-awesome-icon icon="arrow-down" class="w-5 h-5 text-red-600 dark:text-red-400" />
+            <font-awesome-icon icon="arrow-down" class="w-4 h-4 md:w-5 md:h-5 text-red-600 dark:text-red-400" />
           </div>
-          <div class="ml-3">
-            <p class="text-sm font-medium text-red-900 dark:text-red-100">Saídas</p>
-            <p class="text-lg font-semibold text-red-900 dark:text-red-100">
+          <div class="ml-2 md:ml-3 flex-1 min-w-0">
+            <p class="text-xs md:text-sm font-medium text-red-900 dark:text-red-100">Saídas</p>
+            <p class="text-base md:text-lg font-semibold text-red-900 dark:text-red-100 truncate">
               {{ formatarMoeda(totais.saidas) }}
             </p>
           </div>
         </div>
       </div>
 
-      <div class="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+      <div class="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3 md:p-4">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <font-awesome-icon icon="heart" class="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <font-awesome-icon icon="heart" class="w-4 h-4 md:w-5 md:h-5 text-purple-600 dark:text-purple-400" />
           </div>
-          <div class="ml-3">
-            <p class="text-sm font-medium text-purple-900 dark:text-purple-100">Dízimos</p>
-            <p class="text-lg font-semibold text-purple-900 dark:text-purple-100">
+          <div class="ml-2 md:ml-3 flex-1 min-w-0">
+            <p class="text-xs md:text-sm font-medium text-purple-900 dark:text-purple-100">Dízimos</p>
+            <p class="text-base md:text-lg font-semibold text-purple-900 dark:text-purple-100 truncate">
               {{ formatarMoeda(totais.dizimos) }}
             </p>
           </div>
         </div>
       </div>
 
-      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 md:p-4">
         <div class="flex items-center">
           <div class="flex-shrink-0">
             <font-awesome-icon 
               :icon="totais.saldo >= 0 ? 'wallet' : 'exclamation-triangle'" 
-              class="w-5 h-5"
+              class="w-4 h-4 md:w-5 md:h-5"
               :class="totais.saldo >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'"
             />
           </div>
-          <div class="ml-3">
-            <p class="text-sm font-medium text-blue-900 dark:text-blue-100">Saldo</p>
-            <p class="text-lg font-semibold"
+          <div class="ml-2 md:ml-3 flex-1 min-w-0">
+            <p class="text-xs md:text-sm font-medium text-blue-900 dark:text-blue-100">Saldo</p>
+            <p class="text-base md:text-lg font-semibold truncate"
                :class="totais.saldo >= 0 ? 'text-blue-900 dark:text-blue-100' : 'text-red-600 dark:text-red-400'">
               {{ formatarMoeda(totais.saldo) }}
             </p>
@@ -65,34 +65,34 @@
     </div>
 
     <!-- Botões de Exportação -->
-    <div class="bg-card rounded-lg border border-border p-4">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h3 class="text-lg font-semibold text-foreground">Exportar Relatório</h3>
-          <p class="text-sm text-muted-foreground">Baixe seus dados em diferentes formatos</p>
+    <div class="bg-card rounded-lg border border-border p-3 md:p-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4">
+        <div class="flex-1 min-w-0">
+          <h3 class="text-base md:text-lg font-semibold text-foreground">Exportar Relatório</h3>
+          <p class="text-xs md:text-sm text-muted-foreground">Baixe seus dados em diferentes formatos</p>
         </div>
-        <div class="flex items-center space-x-3">
+        <div class="flex items-center gap-2 md:gap-3">
           <button
             @click="exportarParaPDF"
             :disabled="isExporting"
-            class="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg transition-colors text-sm font-medium"
+            class="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-3 md:px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg transition-colors text-xs md:text-sm font-medium"
           >
             <font-awesome-icon 
               :icon="isExporting ? 'spinner' : 'file-pdf'" 
               :class="{ 'animate-spin': isExporting }"
-              class="w-4 h-4" 
+              class="w-3 h-3 md:w-4 md:h-4" 
             />
             <span>PDF</span>
           </button>
           <button
             @click="exportarParaExcel"
             :disabled="isExporting"
-            class="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-lg transition-colors text-sm font-medium"
+            class="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-3 md:px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-lg transition-colors text-xs md:text-sm font-medium"
           >
             <font-awesome-icon 
               :icon="isExporting ? 'spinner' : 'file-excel'" 
               :class="{ 'animate-spin': isExporting }"
-              class="w-4 h-4" 
+              class="w-3 h-3 md:w-4 md:h-4" 
             />
             <span>Excel</span>
           </button>
@@ -101,29 +101,29 @@
     </div>
 
     <!-- Filtros -->
-    <div class="bg-card rounded-lg border border-border p-4">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-card rounded-lg border border-border p-3 md:p-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
         <div>
-          <label class="block text-sm font-medium text-foreground mb-2">Data Inicial</label>
+          <label class="block text-xs md:text-sm font-medium text-foreground mb-1 md:mb-2">Data Inicial</label>
           <input
             v-model="filtros.dataInicial"
             type="date"
-            class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            class="w-full px-2 md:px-3 py-2 text-sm md:text-base border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-foreground mb-2">Data Final</label>
+          <label class="block text-xs md:text-sm font-medium text-foreground mb-1 md:mb-2">Data Final</label>
           <input
             v-model="filtros.dataFinal"
             type="date"
-            class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            class="w-full px-2 md:px-3 py-2 text-sm md:text-base border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
-        <div>
-          <label class="block text-sm font-medium text-foreground mb-2">Tipo</label>
+        <div class="sm:col-span-2 lg:col-span-1">
+          <label class="block text-xs md:text-sm font-medium text-foreground mb-1 md:mb-2">Tipo</label>
           <select
             v-model="filtros.tipo"
-            class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            class="w-full px-2 md:px-3 py-2 text-sm md:text-base border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">Todos os tipos</option>
             <option value="entrada">Entradas</option>
@@ -132,10 +132,10 @@
           </select>
         </div>
       </div>
-      <div class="flex justify-end mt-4">
+      <div class="flex justify-end mt-3 md:mt-4">
         <button
           @click="limparFiltros"
-          class="px-4 py-2 border border-border text-foreground hover:bg-muted rounded-lg transition-colors text-sm"
+          class="w-full sm:w-auto px-3 md:px-4 py-2 border border-border text-foreground hover:bg-muted rounded-lg transition-colors text-xs md:text-sm font-medium"
         >
           Limpar Filtros
         </button>
@@ -143,15 +143,16 @@
     </div>
 
     <!-- Lista de Transações -->
-    <div class="bg-card rounded-lg border border-border">
-      <div class="p-4 border-b border-border">
-        <h3 class="text-lg font-semibold text-foreground">Transações Financeiras</h3>
-        <p class="text-sm text-muted-foreground">
+    <div class="bg-card rounded-lg border border-border overflow-hidden">
+      <div class="p-3 md:p-4 border-b border-border">
+        <h3 class="text-base md:text-lg font-semibold text-foreground">Transações Financeiras</h3>
+        <p class="text-xs md:text-sm text-muted-foreground mt-1">
           {{ relatoriosFiltrados.length }} transação(ões) encontrada(s)
         </p>
       </div>
 
-      <div class="overflow-x-auto">
+      <!-- Vista Desktop: Tabela -->
+      <div class="hidden md:block overflow-x-auto">
         <table class="w-full">
           <thead>
             <tr class="border-b border-border bg-muted/30">
@@ -212,6 +213,59 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Vista Mobile: Cards -->
+      <div class="md:hidden divide-y divide-border">
+        <div v-if="relatoriosFiltrados.length === 0" class="py-8 text-center text-muted-foreground">
+          <div class="flex flex-col items-center px-4">
+            <font-awesome-icon icon="inbox" class="w-12 h-12 mb-3 text-muted-foreground/50" />
+            <p class="text-sm">Nenhuma transação encontrada</p>
+          </div>
+        </div>
+        
+        <div
+          v-for="relatorio in relatoriosFiltrados"
+          :key="relatorio.id"
+          class="p-4 hover:bg-muted/30 transition-colors"
+        >
+          <!-- Cabeçalho do Card -->
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 rounded-full" :style="{ backgroundColor: relatorio.categoria_cor }"></div>
+              <span class="text-sm font-medium text-foreground">{{ relatorio.categoria_nome }}</span>
+            </div>
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                  :class="getTipoClasses(relatorio.tipo)">
+              <font-awesome-icon 
+                :icon="getTipoIcon(relatorio.tipo)" 
+                class="w-3 h-3 mr-1" 
+              />
+              {{ getTipoNome(relatorio.tipo) }}
+            </span>
+          </div>
+
+          <!-- Descrição -->
+          <p class="text-sm text-foreground mb-2 font-medium">{{ relatorio.descricao }}</p>
+
+          <!-- Informações -->
+          <div class="flex items-center justify-between text-xs text-muted-foreground mb-2">
+            <span>{{ formatarData(relatorio.data) }}</span>
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                  :class="getStatusClasses(relatorio.status_pagamento)">
+              {{ getStatusNome(relatorio.status_pagamento) }}
+            </span>
+          </div>
+
+          <!-- Valor -->
+          <div class="flex items-center justify-between pt-2 border-t border-border/50">
+            <span class="text-xs text-muted-foreground">Valor:</span>
+            <span class="text-base font-bold"
+                  :class="getValorClasses(relatorio.tipo)">
+              {{ formatarMoeda(relatorio.valor) }}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
