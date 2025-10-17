@@ -663,94 +663,367 @@ const exportarParaPDF = async () => {
     
     console.log('📊 Dados encontrados:', relatoriosFiltrados.value.length, 'transações')
     
-    // Importação mais simples - sem autotable
-    console.log('📚 Carregando jsPDF...')
     const { default: jsPDF } = await import('jspdf')
-    
-    console.log('✅ jsPDF carregado')
-    
-    // Criar documento PDF simples
     const doc = new jsPDF()
     
-    console.log('📄 Documento PDF criado')
+    // Cores personalizadas
+    const colors = {
+      primary: [99, 102, 241] as [number, number, number],
+      success: [34, 197, 94] as [number, number, number],
+      danger: [239, 68, 68] as [number, number, number],
+      warning: [251, 191, 36] as [number, number, number],
+      purple: [168, 85, 247] as [number, number, number],
+      muted: [107, 114, 128] as [number, number, number],
+      background: [249, 250, 251] as [number, number, number],
+      dark: [31, 41, 55] as [number, number, number]
+    }
     
-    // Cabeçalho simples
-    doc.setFontSize(20)
-    doc.text('Relatório Financeiro', 20, 30)
+    let pageNumber = 1
     
-    doc.setFontSize(12)
-    const dataAtual = new Date().toLocaleDateString('pt-BR')
-    doc.text(`Gerado em: ${dataAtual}`, 20, 45)
-    
-    // Resumo financeiro
-    doc.setFontSize(16)
-    doc.text('Resumo Financeiro:', 20, 65)
-    
-    let yPos = 85
-    doc.setFontSize(12)
-    
-    // Lista simples do resumo
-    doc.text(`Entradas: ${formatarMoeda(totais.value.entradas)}`, 20, yPos)
-    yPos += 10
-    doc.text(`Saídas: ${formatarMoeda(totais.value.saidas)}`, 20, yPos)
-    yPos += 10
-    doc.text(`Dízimos: ${formatarMoeda(totais.value.dizimos)}`, 20, yPos)
-    yPos += 10
-    doc.text(`Saldo: ${formatarMoeda(totais.value.saldo)}`, 20, yPos)
-    yPos += 20
-    
-    // Lista de transações
-    doc.setFontSize(16)
-    doc.text('Transações:', 20, yPos)
-    yPos += 15
-    
-    doc.setFontSize(10)
-    
-    // Listar no máximo 15 transações para caber na página
-    const maxTransacoes = Math.min(relatoriosFiltrados.value.length, 15)
-    
-    for (let i = 0; i < maxTransacoes; i++) {
-      const relatorio = relatoriosFiltrados.value[i]
+    // Função para adicionar cabeçalho em cada página
+    const adicionarCabecalho = (numeroPagina: number) => {
+      // Linha superior colorida
+      doc.setFillColor(...colors.primary)
+      doc.rect(0, 0, 210, 15, 'F')
       
-      const linha = `${formatarData(relatorio.data)} | ${getTipoNome(relatorio.tipo)} | ${relatorio.categoria_nome} | ${formatarMoeda(relatorio.valor)}`
+      // Título
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(16)
+      doc.setFont('helvetica', 'bold')
+      doc.text('💰 Relatório Financeiro', 20, 10)
       
-      doc.text(linha, 20, yPos)
+      // Número da página (canto direito)
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      doc.text(`Página ${numeroPagina}`, 175, 10)
+      
+      // Reset cor do texto
+      doc.setTextColor(...colors.dark)
+    }
+    
+    // Função para adicionar rodapé
+    const adicionarRodape = () => {
+      doc.setFontSize(8)
+      doc.setTextColor(...colors.muted)
+      doc.setFont('helvetica', 'italic')
+      const dataGeracao = new Date().toLocaleString('pt-BR')
+      doc.text(`Gerado em: ${dataGeracao}`, 20, 287)
+      doc.text('Sistema de Gestão Financeira', 145, 287)
+    }
+    
+    // PRIMEIRA PÁGINA - Cabeçalho e Resumo
+    adicionarCabecalho(pageNumber)
+    
+    let yPos = 25
+    
+    // Informações de filtros aplicados (se houver)
+    if (filtros.value.dataInicial || filtros.value.dataFinal || filtros.value.tipo) {
+      doc.setFillColor(...colors.background)
+      doc.rect(15, yPos - 5, 180, 20, 'F')
+      
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(...colors.primary)
+      doc.text('📋 Filtros Aplicados:', 20, yPos)
+      
       yPos += 8
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(...colors.dark)
       
-      // Nova página se necessário
-      if (yPos > 270) {
-        doc.addPage()
-        yPos = 20
+      if (filtros.value.dataInicial) {
+        doc.text(`• Data Inicial: ${formatarData(filtros.value.dataInicial)}`, 25, yPos)
+        yPos += 5
       }
+      
+      if (filtros.value.dataFinal) {
+        doc.text(`• Data Final: ${formatarData(filtros.value.dataFinal)}`, 25, yPos)
+        yPos += 5
+      }
+      
+      if (filtros.value.tipo) {
+        doc.text(`• Tipo: ${getTipoNome(filtros.value.tipo)}`, 25, yPos)
+        yPos += 5
+      }
+      
+      yPos += 8
     }
     
-    // Nota se há mais transações
-    if (relatoriosFiltrados.value.length > maxTransacoes) {
-      yPos += 10
-      doc.text(`... e mais ${relatoriosFiltrados.value.length - maxTransacoes} transação(ões)`, 20, yPos)
+    // Seção de Resumo Financeiro
+    doc.setFillColor(...colors.primary)
+    doc.rect(15, yPos, 180, 10, 'F')
+    
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.text('💼 Resumo Financeiro', 20, yPos + 7)
+    
+    yPos += 18
+    
+    // Cards do Resumo
+    const cardWidth = 42
+    const cardHeight = 22
+    const cardSpacing = 3
+    let xPos = 15
+    
+    // Card Entradas
+    doc.setFillColor(220, 252, 231) // Green 100
+    doc.rect(xPos, yPos, cardWidth, cardHeight, 'F')
+    doc.setDrawColor(...colors.success)
+    doc.setLineWidth(0.5)
+    doc.rect(xPos, yPos, cardWidth, cardHeight, 'S')
+    
+    doc.setFontSize(9)
+    doc.setTextColor(...colors.success)
+    doc.setFont('helvetica', 'bold')
+    doc.text('↑ ENTRADAS', xPos + 3, yPos + 6)
+    
+    doc.setFontSize(12)
+    doc.setTextColor(...colors.dark)
+    doc.text(formatarMoeda(totais.value.entradas), xPos + 3, yPos + 15)
+    
+    xPos += cardWidth + cardSpacing
+    
+    // Card Saídas
+    doc.setFillColor(254, 226, 226) // Red 100
+    doc.rect(xPos, yPos, cardWidth, cardHeight, 'F')
+    doc.setDrawColor(...colors.danger)
+    doc.rect(xPos, yPos, cardWidth, cardHeight, 'S')
+    
+    doc.setFontSize(9)
+    doc.setTextColor(...colors.danger)
+    doc.setFont('helvetica', 'bold')
+    doc.text('↓ SAÍDAS', xPos + 3, yPos + 6)
+    
+    doc.setFontSize(12)
+    doc.setTextColor(...colors.dark)
+    doc.text(formatarMoeda(totais.value.saidas), xPos + 3, yPos + 15)
+    
+    xPos += cardWidth + cardSpacing
+    
+    // Card Dízimos
+    doc.setFillColor(243, 232, 255) // Purple 100
+    doc.rect(xPos, yPos, cardWidth, cardHeight, 'F')
+    doc.setDrawColor(...colors.purple)
+    doc.rect(xPos, yPos, cardWidth, cardHeight, 'S')
+    
+    doc.setFontSize(9)
+    doc.setTextColor(...colors.purple)
+    doc.setFont('helvetica', 'bold')
+    doc.text('♥ DÍZIMOS', xPos + 3, yPos + 6)
+    
+    doc.setFontSize(12)
+    doc.setTextColor(...colors.dark)
+    doc.text(formatarMoeda(totais.value.dizimos), xPos + 3, yPos + 15)
+    
+    xPos += cardWidth + cardSpacing
+    
+    // Card Saldo
+    const corSaldo = totais.value.saldo >= 0 ? colors.success : colors.danger
+    const bgSaldo = (totais.value.saldo >= 0 ? [220, 252, 231] : [254, 226, 226]) as [number, number, number]
+    
+    doc.setFillColor(...bgSaldo)
+    doc.rect(xPos, yPos, cardWidth, cardHeight, 'F')
+    doc.setDrawColor(...corSaldo)
+    doc.rect(xPos, yPos, cardWidth, cardHeight, 'S')
+    
+    doc.setFontSize(9)
+    doc.setTextColor(...corSaldo)
+    doc.setFont('helvetica', 'bold')
+    doc.text('💰 SALDO', xPos + 3, yPos + 6)
+    
+    doc.setFontSize(12)
+    doc.setTextColor(...colors.dark)
+    doc.text(formatarMoeda(totais.value.saldo), xPos + 3, yPos + 15)
+    
+    yPos += cardHeight + 15
+    
+    // Seção de Transações
+    doc.setFillColor(...colors.primary)
+    doc.rect(15, yPos, 180, 10, 'F')
+    
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`📊 Transações (${relatoriosFiltrados.value.length})`, 20, yPos + 7)
+    
+    yPos += 18
+    
+    // Cabeçalho da tabela
+    doc.setFillColor(...colors.background)
+    doc.rect(15, yPos, 180, 8, 'F')
+    
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(...colors.dark)
+    
+    doc.text('Data', 17, yPos + 5)
+    doc.text('Tipo', 40, yPos + 5)
+    doc.text('Categoria', 60, yPos + 5)
+    doc.text('Descrição', 90, yPos + 5)
+    doc.text('Valor', 158, yPos + 5)
+    doc.text('Status', 178, yPos + 5)
+    
+    yPos += 10
+    
+    // Função auxiliar para processar transações (incluindo parcelas de grupos)
+    const obterTodasTransacoes = () => {
+      const todas: any[] = []
+      
+      relatoriosFiltrados.value.forEach(item => {
+        if (item.isGrupo) {
+          // Adicionar grupo e suas parcelas
+          todas.push({
+            ...item,
+            isGrupoCabecalho: true
+          })
+          item.parcelas.forEach((parcela: any) => {
+            todas.push({
+              ...parcela,
+              isParcela: true
+            })
+          })
+        } else {
+          todas.push(item)
+        }
+      })
+      
+      return todas
     }
+    
+    const todasTransacoes = obterTodasTransacoes()
+    
+    // Renderizar todas as transações com paginação automática
+    for (let i = 0; i < todasTransacoes.length; i++) {
+      const transacao = todasTransacoes[i]
+      
+      // Verificar se precisa de nova página (deixar espaço para rodapé)
+      if (yPos > 270) {
+        adicionarRodape()
+        doc.addPage()
+        pageNumber++
+        adicionarCabecalho(pageNumber)
+        yPos = 25
+        
+        // Repetir cabeçalho da tabela na nova página
+        doc.setFillColor(...colors.background)
+        doc.rect(15, yPos, 180, 8, 'F')
+        
+        doc.setFontSize(8)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(...colors.dark)
+        
+        doc.text('Data', 17, yPos + 5)
+        doc.text('Tipo', 40, yPos + 5)
+        doc.text('Categoria', 60, yPos + 5)
+        doc.text('Descrição', 90, yPos + 5)
+        doc.text('Valor', 158, yPos + 5)
+        doc.text('Status', 178, yPos + 5)
+        
+        yPos += 10
+      }
+      
+      // Renderizar linha
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(7)
+      
+      // Background alternado
+      if (i % 2 === 0) {
+        doc.setFillColor(250, 250, 250)
+        doc.rect(15, yPos - 3, 180, 7, 'F')
+      }
+      
+      // Cor especial para grupos e parcelas
+      if (transacao.isGrupoCabecalho) {
+        doc.setFillColor(243, 232, 255) // Purple 100
+        doc.rect(15, yPos - 3, 180, 7, 'F')
+        doc.setFont('helvetica', 'bold')
+      } else if (transacao.isParcela) {
+        doc.setFillColor(249, 250, 251) // Gray 50
+        doc.rect(15, yPos - 3, 180, 7, 'F')
+      }
+      
+      doc.setTextColor(...colors.dark)
+      
+      // Data
+      const dataTexto = transacao.isGrupoCabecalho 
+        ? (transacao.proximoVencimento ? formatarData(transacao.proximoVencimento) : '—')
+        : formatarData(transacao.data_vencimento || transacao.data)
+      doc.text(dataTexto, 17, yPos + 2)
+      
+      // Tipo com cor
+      const tipoTexto = transacao.isGrupoCabecalho ? 'Parcelada' : getTipoNome(transacao.tipo)
+      let corTipo = colors.muted
+      
+      if (!transacao.isGrupoCabecalho) {
+        if (transacao.tipo === 'entrada') corTipo = colors.success
+        else if (transacao.tipo === 'saida') corTipo = colors.danger
+        else if (transacao.tipo === 'dizimo') corTipo = colors.purple
+      } else {
+        corTipo = colors.purple
+      }
+      
+      doc.setTextColor(...corTipo)
+      doc.text(tipoTexto, 40, yPos + 2)
+      doc.setTextColor(...colors.dark)
+      
+      // Categoria
+      const categoriaTexto = transacao.categoria_nome || '—'
+      doc.text(categoriaTexto.substring(0, 12), 60, yPos + 2)
+      
+      // Descrição
+      let descricaoTexto = transacao.descricao
+      if (transacao.isGrupoCabecalho) {
+        descricaoTexto = `${transacao.descricao} (${transacao.parcelasPagas}/${transacao.totalParcelas})`
+      } else if (transacao.isParcela) {
+        descricaoTexto = `  └ ${transacao.descricao}`
+      }
+      doc.text(descricaoTexto.substring(0, 35), 90, yPos + 2)
+      
+      // Valor com cor
+      const valorTexto = transacao.isGrupoCabecalho 
+        ? formatarMoeda(transacao.valorTotal)
+        : formatarMoeda(transacao.valor)
+      
+      let corValor = colors.dark
+      if (transacao.tipo === 'entrada') corValor = colors.success
+      else if (transacao.tipo === 'saida' || transacao.isGrupoCabecalho) corValor = colors.danger
+      else if (transacao.tipo === 'dizimo') corValor = colors.purple
+      
+      doc.setTextColor(...corValor)
+      doc.text(valorTexto, 158, yPos + 2)
+      doc.setTextColor(...colors.dark)
+      
+      // Status
+      if (!transacao.isGrupoCabecalho) {
+        const statusTexto = getStatusNome(transacao.status_pagamento)
+        let corStatus = colors.muted
+        
+        if (transacao.status_pagamento === 'pago') corStatus = colors.success
+        else if (transacao.status_pagamento === 'pendente') corStatus = colors.warning
+        else if (transacao.status_pagamento === 'vencido') corStatus = colors.danger
+        
+        doc.setTextColor(...corStatus)
+        doc.text(statusTexto, 178, yPos + 2)
+      }
+      
+      yPos += 7
+    }
+    
+    // Adicionar rodapé na última página
+    adicionarRodape()
     
     // Salvar PDF
-    console.log('💾 Salvando PDF...')
     const nomeArquivo = `relatorio-financeiro-${new Date().toISOString().split('T')[0]}.pdf`
     doc.save(nomeArquivo)
     
     console.log('✅ PDF gerado com sucesso:', nomeArquivo)
     
   } catch (error) {
-    console.error('❌ Erro detalhado ao exportar PDF:', error)
-    console.error('Stack trace:', (error as Error).stack)
-    
-    let mensagemErro = 'Erro desconhecido ao gerar PDF'
-    
-    if (error instanceof Error) {
-      mensagemErro = error.message
-    }
-    
-    alert(`Erro ao gerar PDF: ${mensagemErro}`)
+    console.error('❌ Erro ao exportar PDF:', error)
+    alert('Erro ao gerar PDF. Tente novamente.')
   } finally {
     isExporting.value = false
-    console.log('🏁 Finalizando exportação PDF')
   }
 }
 
