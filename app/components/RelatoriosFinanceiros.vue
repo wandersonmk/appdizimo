@@ -764,7 +764,7 @@ const exportarParaPDF = async () => {
       doc.setFontSize(11)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(...colors.primary)
-      doc.text('📋 Filtros Aplicados:', 20, yPos)
+      doc.text(converterParaLatin1('Filtros Aplicados:'), 20, yPos)
       
       yPos += 8
       doc.setFontSize(9)
@@ -870,7 +870,7 @@ const exportarParaPDF = async () => {
     doc.setFontSize(9)
     doc.setTextColor(...corSaldo)
     doc.setFont('helvetica', 'bold')
-    doc.text('💰 SALDO', xPos + 3, yPos + 6)
+    doc.text(converterParaLatin1('SALDO'), xPos + 3, yPos + 6)
     
     doc.setFontSize(12)
     doc.setTextColor(...colors.dark)
