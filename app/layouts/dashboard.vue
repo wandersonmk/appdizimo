@@ -80,7 +80,7 @@ const pageTitle = computed(() => {
     case '/clientes':
       return 'Clientes'
     case '/relatorios':
-      return 'Relatórios de Tickets'
+      return 'Relatórios Financeiros'
     case '/configuracoes':
       return 'Configurações'
     case '/ajuda':

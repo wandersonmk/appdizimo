@@ -47,7 +47,8 @@ import {
   faSpinner,
   faInbox,
   faHeart,
-  faBriefcase
+  faBriefcase,
+  faEdit
 } from '@fortawesome/free-solid-svg-icons'
 
 // This is important, we are going to let Nuxt worry about the CSS
@@ -102,7 +103,8 @@ library.add(
   faSpinner,
   faInbox,
   faHeart,
-  faBriefcase
+  faBriefcase,
+  faEdit
 )
 
 export default defineNuxtPlugin((nuxtApp) => {

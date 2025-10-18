@@ -29,6 +29,7 @@ const {
   adicionarDespesaAvancada,
   marcarComoPago,
   estornarPagamento,
+  editarTransacao,
   excluirTransacao,
   formatarMoeda,
   formatarData,
@@ -44,8 +45,10 @@ const toast = ref<any>(null)
 // Estados locais
 const showAddEntradaModal = ref(false)
 const showAddDespesaModal = ref(false)
+const showEditModal = ref(false)
 const showConfirmDeleteModal = ref(false)
 const transacaoParaExcluir = ref<any>(null)
+const transacaoParaEditar = ref<any>(null)
 const filtroTipo = ref<'todas' | 'entrada' | 'saida' | 'dizimo'>('todas')
 const filtroDataInicio = ref('')
 const filtroDataFim = ref('')
@@ -257,6 +260,67 @@ const handleSubmitDespesa = async () => {
   } catch (error) {
     console.error('Erro ao adicionar despesa:', error)
     toast.value?.error('❌ Erro ao adicionar despesa. Tente novamente.')
+  }
+}
+
+// Funções de edição
+const abrirModalEdicao = (transacao: any) => {
+  // Converter o valor para centavos antes de formatar
+  // Ex: 100.00 -> "10000" centavos -> "R$ 100,00"
+  const valorEmCentavos = Math.round(transacao.valor * 100).toString()
+  
+  transacaoParaEditar.value = {
+    ...transacao,
+    categoria: transacao.categoria_id || transacao.categoria,
+    valorFormatado: formatCurrency(valorEmCentavos)
+  }
+  showEditModal.value = true
+}
+
+const cancelarEdicao = () => {
+  transacaoParaEditar.value = null
+  showEditModal.value = false
+}
+
+const onEditValorInput = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const maskedValue = applyCurrencyMask(target.value)
+  
+  transacaoParaEditar.value.valorFormatado = maskedValue
+  target.value = maskedValue
+  transacaoParaEditar.value.valor = parseCurrencyValue(maskedValue)
+}
+
+const executarEdicao = async () => {
+  if (!transacaoParaEditar.value) return
+  
+  try {
+    const updates: any = {
+      descricao: transacaoParaEditar.value.descricao,
+      valor: transacaoParaEditar.value.valor,
+      categoria_id: transacaoParaEditar.value.categoria || transacaoParaEditar.value.categoria_id
+    }
+    
+    // Adiciona campo específico de data dependendo do tipo
+    if (transacaoParaEditar.value.tipo === 'entrada') {
+      updates.data = transacaoParaEditar.value.data
+    } else if (transacaoParaEditar.value.tipo === 'saida') {
+      updates.data_vencimento = transacaoParaEditar.value.data_vencimento
+    }
+    
+    await editarTransacao(transacaoParaEditar.value.id, updates)
+    
+    // Recarregar todas as transações para refletir as mudanças (incluindo dízimo)
+    await fetchTransacoes()
+    
+    const tipoLabel = transacaoParaEditar.value.tipo === 'entrada' ? 'Receita' : 'Despesa'
+    toast.value?.success(`✅ ${tipoLabel} "${transacaoParaEditar.value.descricao}" editada com sucesso!`)
+    
+    showEditModal.value = false
+    transacaoParaEditar.value = null
+  } catch (error) {
+    console.error('Erro ao editar transação:', error)
+    toast.value?.error('❌ Erro ao editar transação. Tente novamente.')
   }
 }
 
@@ -709,80 +773,82 @@ onMounted(async () => {
         </div>
       </div>
       
-      <div v-else class="divide-y divide-border">
+      <div v-else class="space-y-3 p-3">
         <div v-for="item in transacoesFiltradas" :key="item.id" class="relative transition-all duration-300">
           <!-- Grupo de despesas parceladas -->
-          <div v-if="item.isGrupo" class="p-3 sm:p-5 hover:bg-muted/50 group">
-            <div class="flex items-start sm:items-center justify-between gap-3">
-              <div class="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
-                  <font-awesome-icon icon="credit-card" class="text-white text-sm sm:text-lg" />
+          <div v-if="item.isGrupo" class="p-4 bg-purple-900/20 rounded-lg border border-purple-700/50">
+            <!-- Cabeçalho do Grupo -->
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center gap-3 flex-1">
+                <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+                  <font-awesome-icon icon="credit-card" class="text-white text-base" />
                 </div>
                 <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2">
-                    <p class="font-semibold text-foreground text-sm sm:text-base truncate">{{ item.descricao }}</p>
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      {{ item.parcelasPagas }}/{{ item.totalParcelas }} pagas
-                    </span>
-                  </div>
-                  <div class="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-400 mt-1">
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-card-foreground">
-                      {{ item.categoria?.nome }}
-                    </span>
-                    <span class="hidden sm:inline">•</span>
-                    <span v-if="item.proximoVencimento" class="flex items-center gap-1 text-amber-400">
-                      ⏰ Próximo: {{ formatarData(item.proximoVencimento) }}
-                    </span>
-                  </div>
+                  <span class="text-sm font-medium text-gray-200 block mb-1">{{ item.categoria?.nome }}</span>
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    Parcelada
+                  </span>
                 </div>
               </div>
-              <div class="flex flex-col items-end gap-2 flex-shrink-0">
-                <div class="text-right">
-                  <p class="text-base sm:text-lg lg:text-xl font-bold text-red-400">{{ formatCurrency(item.valorTotal) }}</p>
-                  <p class="text-xs text-gray-400">Total parcelado</p>
-                </div>
-                
-                <!-- Botões do grupo -->
-                <div class="flex gap-1">
-                  <button 
-                    @click="toggleGrupoExpansao(item.id)"
-                    class="p-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-md transition-colors min-w-[32px] h-8 flex items-center justify-center"
-                    title="Expandir/Recolher parcelas"
-                  >
-                    <font-awesome-icon 
-                      :icon="despesasParceladasExpandidas.has(item.id) ? 'chevron-up' : 'chevron-down'" 
-                      class="text-xs"
-                    />
-                  </button>
-                  
-                  <!-- Botão para excluir toda a despesa parcelada -->
-                  <button
-                    @click="confirmarExclusao(item)"
-                    class="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors min-w-[32px] h-8 flex items-center justify-center relative group/delete"
-                    title="⚠️ EXCLUIR TODAS as parcelas desta despesa"
-                  >
-                    <font-awesome-icon icon="trash-alt" class="text-xs" />
-                    <!-- Indicador de múltiplas exclusões -->
-                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full flex items-center justify-center">
-                      <span class="text-[8px] font-bold text-white">{{ item.totalParcelas }}</span>
-                    </span>
-                  </button>
-                </div>
+              <button
+                @click="confirmarExclusao(item)"
+                class="p-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg transition-colors flex items-center justify-center relative shadow-sm flex-shrink-0"
+                title="⚠️ EXCLUIR TODAS as parcelas desta despesa"
+              >
+                <font-awesome-icon icon="trash-alt" class="text-sm" />
+                <span class="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center border-2 border-gray-900">
+                  <span class="text-[9px] font-bold text-white">{{ item.totalParcelas }}</span>
+                </span>
+              </button>
+            </div>
+
+            <!-- Descrição e Badge -->
+            <div class="mb-3">
+              <p class="text-base font-semibold text-gray-100 mb-2">{{ item.descricao }}</p>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-500/20 text-orange-300 border border-orange-500/30">
+                  {{ item.parcelasPagas }}/{{ item.totalParcelas }} pagas
+                </span>
+                <span v-if="item.proximoVencimento" class="text-xs text-amber-400 font-medium">
+                  ⏰ Próximo: {{ formatarData(item.proximoVencimento) }}
+                </span>
+                <span v-else class="text-xs text-green-400 font-medium">
+                  ✅ Todas pagas
+                </span>
               </div>
             </div>
+
+            <!-- Valor Total -->
+            <div class="flex items-center justify-between py-2.5 px-3 bg-gray-900/50 rounded-lg border border-gray-700/50 mb-3">
+              <span class="text-xs font-medium text-gray-300">Total Parcelado:</span>
+              <span class="text-lg font-bold text-red-400">
+                {{ formatCurrency(item.valorTotal) }}
+              </span>
+            </div>
+
+            <!-- Botão Expandir/Recolher -->
+            <button 
+              @click="toggleGrupoExpansao(item.id)"
+              class="w-full py-2.5 px-3 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-semibold shadow-sm"
+            >
+              <font-awesome-icon 
+                :icon="despesasParceladasExpandidas.has(item.id) ? 'chevron-up' : 'chevron-down'" 
+              />
+              {{ despesasParceladasExpandidas.has(item.id) ? 'Recolher parcelas' : 'Ver parcelas' }}
+            </button>
             
             <!-- Parcelas expandidas -->
-            <div v-if="despesasParceladasExpandidas.has(item.id)" class="mt-4 ml-3 sm:ml-6 space-y-2 border-l-2 border-orange-200 pl-3 sm:pl-4">
-              <div v-for="parcela in item.parcelas" :key="parcela.id" class="p-3 bg-muted/30 rounded-lg">
-                <div class="flex items-start sm:items-center justify-between gap-3">
+            <div v-if="despesasParceladasExpandidas.has(item.id)" class="mt-3 space-y-2 border-l-3 border-purple-500 pl-3">
+              <div v-for="parcela in item.parcelas" :key="parcela.id" class="p-3 bg-gray-800/50 border border-gray-700/50 rounded-lg">
+                <div class="flex items-start justify-between gap-3 mb-3">
                   <div class="flex-1 min-w-0">
-                    <p class="font-medium text-sm truncate">{{ parcela.descricao }}</p>
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs text-gray-400 mt-1">
-                      <span class="w-fit">📅 {{ formatarData(parcela.data_vencimento) }}</span>
+                    <p class="font-semibold text-sm text-gray-100 mb-2">{{ parcela.descricao }}</p>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="text-xs text-gray-300 font-medium">📅 {{ formatarData(parcela.data_vencimento) }}</span>
                       <span 
                         :class="[
-                          'px-2 py-1 rounded-full text-xs font-medium w-fit',
-                          parcela.status_pagamento === 'pago' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
+                          'px-2 py-1 rounded-full text-xs font-semibold',
+                          parcela.status_pagamento === 'pago' ? 'bg-green-500/20 text-green-300 border border-green-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                         ]"
                       >
                         {{ parcela.status_pagamento === 'pago' ? 'Pago' : 'Pendente' }}
@@ -790,47 +856,54 @@ onMounted(async () => {
                     </div>
                   </div>
                   <div class="flex flex-col items-end gap-2">
-                    <p class="font-bold text-sm" :class="parcela.status_pagamento === 'pago' ? 'text-green-600' : 'text-red-400'">
+                    <p class="font-bold text-base" :class="parcela.status_pagamento === 'pago' ? 'text-green-400' : 'text-red-400'">
                       {{ formatCurrency(parcela.valor) }}
                     </p>
-                    <div class="flex gap-1 sm:gap-2">
-                      <button 
-                        v-if="parcela.status_pagamento === 'pendente'"
-                        @click="marcarComoPageComToast(parcela.id)"
-                        class="p-1.5 sm:p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-md sm:rounded-lg flex items-center justify-center transition-colors min-w-[32px] h-8"
-                        title="Marcar como pago"
-                      >
-                        <font-awesome-icon icon="check" class="text-xs" />
-                      </button>
-                      <button 
-                        v-else
-                        @click="estornarPagamentoComToast(parcela.id)"
-                        class="p-1.5 sm:p-2 bg-amber-500 hover:bg-amber-600 text-white rounded-md sm:rounded-lg flex items-center justify-center transition-colors min-w-[32px] h-8"
-                        title="Estornar pagamento"
-                      >
-                        <font-awesome-icon icon="undo-alt" class="text-xs" />
-                      </button>
-                      <button 
-                        @click="transacaoParaExcluir = parcela; showConfirmDeleteModal = true"
-                        class="p-1.5 sm:p-2 bg-red-500 hover:bg-red-600 text-white rounded-md sm:rounded-lg flex items-center justify-center transition-colors text-xs min-w-[32px] h-8"
-                        title="Excluir parcela"
-                      >
-                        <font-awesome-icon icon="trash-alt" class="text-xs" />
-                      </button>
-                    </div>
                   </div>
+                </div>
+                
+                <!-- Botões de ação -->
+                <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-700/50 md:justify-end">
+                  <button 
+                    v-if="parcela.status_pagamento === 'pendente'"
+                    @click="marcarComoPageComToast(parcela.id)"
+                    class="flex-1 md:flex-none md:min-w-[120px] py-2 px-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-lg flex items-center justify-center gap-2 transition-colors text-xs font-semibold shadow-sm"
+                    title="Marcar como pago"
+                  >
+                    <font-awesome-icon icon="check" class="text-sm" />
+                    <span>Pagar</span>
+                  </button>
+                  <button 
+                    v-else
+                    @click="estornarPagamentoComToast(parcela.id)"
+                    class="flex-1 md:flex-none md:min-w-[120px] py-2 px-4 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white rounded-lg flex items-center justify-center gap-2 transition-colors text-xs font-semibold shadow-sm"
+                    title="Estornar pagamento"
+                  >
+                    <font-awesome-icon icon="undo-alt" class="text-sm" />
+                    <span>Estornar</span>
+                  </button>
+                  <button @click="abrirModalEdicao(parcela)" class="py-2 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg flex items-center justify-center transition-colors text-xs font-semibold shadow-sm w-[48px] md:min-w-[48px]" title="Editar parcela">
+                    <font-awesome-icon icon="edit" class="text-sm" />
+                  </button>
+                  <button 
+                    @click="transacaoParaExcluir = parcela; showConfirmDeleteModal = true"
+                    class="py-2 px-4 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg flex items-center justify-center transition-colors text-xs font-semibold shadow-sm w-[48px] md:min-w-[48px]"
+                    title="Excluir parcela"
+                  >
+                    <font-awesome-icon icon="trash-alt" class="text-sm" />
+                  </button>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Transação individual -->
-          <div v-else class="p-3 sm:p-5 hover:bg-muted/50 group">
-            <div class="flex items-start sm:items-center justify-between gap-3">
-              <div class="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
+          <div v-else class="p-4 bg-gray-800/50 hover:bg-gray-800/70 rounded-lg border border-gray-700/50 transition-colors">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-3 flex-1 min-w-0">
                 <div 
                   :class="[
-                    'w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-md flex-shrink-0',
+                    'w-10 h-10 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0',
                     item.tipo === 'entrada' ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 
                     item.tipo === 'dizimo' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-gradient-to-br from-red-500 to-rose-600'
                   ]"
@@ -838,93 +911,105 @@ onMounted(async () => {
                   <font-awesome-icon 
                     :icon="item.tipo === 'entrada' ? 'arrow-up' : 
                           item.tipo === 'dizimo' ? 'church' : 'arrow-down'"
-                    class="text-white text-sm sm:text-lg"
+                    class="text-white text-base"
                   />
                 </div>
                 <div class="flex-1 min-w-0">
-                  <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
-                    <p class="font-semibold text-foreground text-sm sm:text-base truncate">{{ item.descricao }}</p>
+                  <p class="font-semibold text-gray-100 text-base mb-2">{{ item.descricao }}</p>
+                  <div class="flex flex-wrap items-center gap-2 mb-1">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-700/50 text-gray-300 border border-gray-600/30">
+                      {{ item.categoria?.nome }}
+                    </span>
                     <span 
                       :class="[
-                        'px-2 py-1 rounded-full text-xs font-medium w-fit flex-shrink-0',
-                        item.tipo === 'entrada' ? 'bg-green-100 text-green-800' :
-                        item.tipo === 'dizimo' ? 'bg-emerald-100 text-emerald-800' : 
-                        item.status_pagamento === 'pago' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
+                        'px-2 py-1 rounded-full text-xs font-semibold',
+                        item.tipo === 'entrada' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
+                        item.tipo === 'dizimo' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 
+                        item.status_pagamento === 'pago' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                       ]"
                     >
                       {{ item.tipo === 'dizimo' ? 'Dízimo' : 
                          item.tipo === 'entrada' ? 'Entrada' : 
                          item.status_pagamento === 'pago' ? 'Pago' : 'Pendente' }}
                     </span>
-                  </div>
-                  <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs text-gray-400">
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-card-foreground w-fit">
-                      {{ item.categoria?.nome }}
-                    </span>
                     <span v-if="item.data_vencimento && item.tipo === 'saida'" 
                           :class="[
-                            'flex items-center gap-1 w-fit',
+                            'text-xs font-medium',
                             new Date(item.data_vencimento) < new Date() && item.status_pagamento === 'pendente' ? 'text-red-400' :
                             new Date(item.data_vencimento).toDateString() === new Date().toDateString() && item.status_pagamento === 'pendente' ? 'text-amber-400' :
-                            'text-gray-400'
+                            'text-gray-300'
                           ]">
                       ⏰ {{ new Date(item.data_vencimento) < new Date() && item.status_pagamento === 'pendente' ? 'Vencida' : 'Vence' }}: {{ formatarData(item.data_vencimento) }}
                     </span>
                   </div>
                   
                   <!-- Observações -->
-                  <div v-if="item.observacoes" class="text-xs text-gray-500 mt-1 italic line-clamp-2 sm:line-clamp-none">
+                  <div v-if="item.observacoes" class="text-xs text-gray-400 mt-1 italic">
                     "{{ item.observacoes }}"
                   </div>
                 </div>
               </div>
               <!-- Layout responsivo para valor e botões -->
-              <div class="flex flex-col items-end gap-2 flex-shrink-0">
+              <div class="flex flex-col items-end gap-3 flex-shrink-0">
                 <!-- Valor -->
                 <div class="text-right">
                   <p 
                     :class="[
-                      'text-base sm:text-lg lg:text-xl font-bold',
-                      item.tipo === 'entrada' ? 'text-green-600' : 
-                      item.tipo === 'dizimo' ? 'text-emerald-600' : 'text-red-600'
+                      'text-xl font-bold',
+                      item.tipo === 'entrada' ? 'text-green-400' : 
+                      item.tipo === 'dizimo' ? 'text-emerald-400' : 'text-red-400'
                     ]"
                   >
                     {{ item.tipo === 'entrada' ? '+' : '-' }}{{ formatCurrency(item.valor) }}
                   </p>
-                  <div v-if="item.tipo === 'saida' && item.status_pagamento === 'pago' && item.data_pagamento" class="text-xs text-blue-600">
+                  <div v-if="item.tipo === 'saida' && item.status_pagamento === 'pago' && item.data_pagamento" class="text-xs text-blue-400 font-medium">
                     Pago em {{ formatarData(item.data_pagamento) }}
                   </div>
                 </div>
 
                 <!-- Botões de ação -->
-                <div class="flex gap-1 sm:gap-2">
+                <div class="flex flex-col gap-2 min-w-[120px] max-w-[140px]">
                   <!-- Botões específicos para despesas -->
                   <template v-if="item.tipo === 'saida'">
                     <button
                       v-if="item.status_pagamento === 'pendente'"
                       @click="marcarComoPago(item.id)"
-                      class="p-1.5 sm:p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-md sm:rounded-lg flex items-center justify-center transition-colors min-w-[32px] h-8"
+                      class="py-2 px-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-lg flex items-center justify-center gap-2 transition-colors text-xs font-semibold shadow-sm whitespace-nowrap"
                       title="Marcar como pago"
                     >
-                      <font-awesome-icon icon="check" class="text-xs" />
+                      <font-awesome-icon icon="check" class="text-sm" />
+                      <span>Pagar</span>
                     </button>
                     <button
                       v-else
                       @click="estornarPagamento(item.id)"
-                      class="p-1.5 sm:p-2 bg-amber-500 hover:bg-amber-600 text-white rounded-md sm:rounded-lg flex items-center justify-center transition-colors min-w-[32px] h-8"
+                      class="py-2 px-4 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white rounded-lg flex items-center justify-center gap-2 transition-colors text-xs font-semibold shadow-sm whitespace-nowrap"
                       title="Estornar pagamento"
                     >
-                      <font-awesome-icon icon="undo-alt" class="text-xs" />
+                      <font-awesome-icon icon="undo-alt" class="text-sm" />
+                      <span>Estornar</span>
                     </button>
                   </template>
+                  
+                  <!-- Botão de editar - NÃO aparece para dízimos -->
+                  <button
+                    v-if="item.tipo !== 'dizimo'"
+                    @click="abrirModalEdicao(item)"
+                    class="py-2 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg flex items-center justify-center gap-2 transition-colors text-xs font-semibold shadow-sm whitespace-nowrap"
+                    :title="`Editar ${item.tipo === 'entrada' ? 'receita' : 'despesa'}`"
+                  >
+                    <font-awesome-icon icon="edit" class="text-sm" />
+                    <span>Editar</span>
+                  </button>
                   
                   <!-- Botão de excluir para todas as transações - SEMPRE VISÍVEL -->
                   <button
                     @click="confirmarExclusao(item)"
-                    class="p-1.5 sm:p-2 bg-red-500 hover:bg-red-600 text-white rounded-md sm:rounded-lg flex items-center justify-center transition-colors text-xs min-w-[32px] h-8"
+                    class="py-2 px-4 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg flex items-center justify-center gap-2 transition-colors text-xs font-semibold shadow-sm whitespace-nowrap"
                     :title="`Excluir ${item.tipo === 'entrada' ? 'receita' : item.tipo === 'dizimo' ? 'dízimo' : 'despesa'}`"
                   >
-                    <font-awesome-icon icon="trash-alt" class="text-xs" />
+                    <font-awesome-icon icon="trash-alt" class="text-sm" />
+                    <span>Excluir</span>
                   </button>
                 </div>
               </div>
@@ -1177,6 +1262,126 @@ onMounted(async () => {
             </AppButton>
             <AppButton type="submit" class="flex-1 bg-red-600 hover:bg-red-700">
               Registrar Despesa
+            </AppButton>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal de Edição -->
+    <div v-if="showEditModal && transacaoParaEditar" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+      <div class="bg-card text-card-foreground rounded-lg border border-border max-w-md w-full p-6 shadow-lg">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-3">
+            <div :class="[
+              'w-10 h-10 rounded-lg flex items-center justify-center shadow-lg',
+              transacaoParaEditar.tipo === 'entrada' ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-red-500 to-rose-600'
+            ]">
+              <font-awesome-icon icon="edit" class="text-white" />
+            </div>
+            <h3 class="text-lg font-semibold text-foreground">
+              {{ transacaoParaEditar.tipo === 'entrada' ? '✏️ Editar Receita' : '✏️ Editar Despesa' }}
+            </h3>
+          </div>
+          <button @click="cancelarEdicao" class="text-gray-400 hover:text-card-foreground p-2 hover:bg-muted rounded-lg transition-colors">
+            <font-awesome-icon icon="times" class="text-xl" />
+          </button>
+        </div>
+
+        <form @submit.prevent="executarEdicao" class="space-y-4">
+          <!-- Descrição -->
+          <div>
+            <label for="edit-descricao" class="block text-sm font-medium text-gray-300 mb-2">
+              Descrição *
+            </label>
+            <input
+              id="edit-descricao"
+              v-model="transacaoParaEditar.descricao"
+              type="text"
+              required
+              class="w-full px-4 py-2.5 bg-muted text-card-foreground rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+              placeholder="Ex: Salário, Compra supermercado, etc."
+            />
+          </div>
+
+          <!-- Categoria -->
+          <div>
+            <label for="edit-categoria" class="block text-sm font-medium text-gray-300 mb-2">
+              Categoria *
+            </label>
+            <select
+              id="edit-categoria"
+              v-model="transacaoParaEditar.categoria"
+              required
+              class="w-full px-4 py-2.5 bg-muted text-card-foreground rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+            >
+              <option value="" disabled>Selecione uma categoria</option>
+              <option 
+                v-for="cat in (transacaoParaEditar.tipo === 'entrada' ? categoriasEntrada : categoriasSaida)" 
+                :key="cat.id" 
+                :value="cat.id"
+              >
+                {{ cat.nome }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Valor -->
+          <div>
+            <label for="edit-valor" class="block text-sm font-medium text-gray-300 mb-2">
+              Valor *
+            </label>
+            <input
+              id="edit-valor"
+              :value="transacaoParaEditar.valorFormatado"
+              @input="onEditValorInput"
+              type="text"
+              required
+              class="w-full px-4 py-2.5 bg-muted text-card-foreground rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+              placeholder="R$ 0,00"
+            />
+          </div>
+
+          <!-- Data -->
+          <div>
+            <label :for="transacaoParaEditar.tipo === 'entrada' ? 'edit-data' : 'edit-data-vencimento'" class="block text-sm font-medium text-gray-300 mb-2">
+              {{ transacaoParaEditar.tipo === 'entrada' ? 'Data da Receita *' : 'Data de Vencimento *' }}
+            </label>
+            <input
+              v-if="transacaoParaEditar.tipo === 'entrada'"
+              id="edit-data"
+              v-model="transacaoParaEditar.data"
+              type="date"
+              required
+              class="w-full px-4 py-2.5 bg-muted text-card-foreground rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+            />
+            <input
+              v-else
+              id="edit-data-vencimento"
+              v-model="transacaoParaEditar.data_vencimento"
+              type="date"
+              required
+              class="w-full px-4 py-2.5 bg-muted text-card-foreground rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+            />
+          </div>
+
+          <div class="flex gap-3 pt-4">
+            <AppButton
+              type="button"
+              @click="cancelarEdicao"
+              variant="outline"
+              class="flex-1 border-border text-card-foreground hover:bg-muted"
+            >
+              Cancelar
+            </AppButton>
+            <AppButton
+              type="submit"
+              :class="[
+                'flex-1',
+                transacaoParaEditar.tipo === 'entrada' ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
+              ]"
+            >
+              ✅ Salvar
             </AppButton>
           </div>
         </form>

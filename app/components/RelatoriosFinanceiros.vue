@@ -1,64 +1,65 @@
 <template>
   <div class="space-y-4 md:space-y-6 px-2 md:px-0">
     <!-- Resumo Financeiro -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-      <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 md:p-4">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <font-awesome-icon icon="arrow-up" class="w-4 h-4 md:w-5 md:h-5 text-green-600 dark:text-green-400" />
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <!-- Card Entradas -->
+      <div class="relative bg-gradient-to-br from-card via-green-950/10 to-card text-card-foreground rounded-lg border border-green-800/20 shadow-sm hover:shadow-md hover:shadow-green-500/10 transition-all duration-300 p-4 md:p-6 group overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-green-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div class="relative z-10 flex items-center justify-between">
+          <div>
+            <p class="text-xs md:text-sm text-gray-400 mb-1">Entradas</p>
+            <p class="text-lg md:text-2xl font-bold text-foreground">{{ formatarMoeda(totais.entradas) }}</p>
+            <p class="text-xs text-green-600 mt-1">receitas</p>
           </div>
-          <div class="ml-2 md:ml-3 flex-1 min-w-0">
-            <p class="text-xs md:text-sm font-medium text-green-900 dark:text-green-100">Entradas</p>
-            <p class="text-base md:text-lg font-semibold text-green-900 dark:text-green-100 truncate">
-              {{ formatarMoeda(totais.entradas) }}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 md:p-4">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <font-awesome-icon icon="arrow-down" class="w-4 h-4 md:w-5 md:h-5 text-red-600 dark:text-red-400" />
-          </div>
-          <div class="ml-2 md:ml-3 flex-1 min-w-0">
-            <p class="text-xs md:text-sm font-medium text-red-900 dark:text-red-100">Saídas</p>
-            <p class="text-base md:text-lg font-semibold text-red-900 dark:text-red-100 truncate">
-              {{ formatarMoeda(totais.saidas) }}
-            </p>
+          <div class="text-green-600 text-xl md:text-2xl">
+            <font-awesome-icon icon="arrow-up" />
           </div>
         </div>
       </div>
 
-      <div class="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3 md:p-4">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <font-awesome-icon icon="heart" class="w-4 h-4 md:w-5 md:h-5 text-purple-600 dark:text-purple-400" />
+      <!-- Card Saídas -->
+      <div class="relative bg-gradient-to-br from-card via-red-950/10 to-card text-card-foreground rounded-lg border border-red-800/20 shadow-sm hover:shadow-md hover:shadow-red-500/10 transition-all duration-300 p-4 md:p-6 group overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div class="relative z-10 flex items-center justify-between">
+          <div>
+            <p class="text-xs md:text-sm text-gray-400 mb-1">Saídas</p>
+            <p class="text-lg md:text-2xl font-bold text-foreground">{{ formatarMoeda(totais.saidas) }}</p>
+            <p class="text-xs text-red-600 mt-1">despesas</p>
           </div>
-          <div class="ml-2 md:ml-3 flex-1 min-w-0">
-            <p class="text-xs md:text-sm font-medium text-purple-900 dark:text-purple-100">Dízimos</p>
-            <p class="text-base md:text-lg font-semibold text-purple-900 dark:text-purple-100 truncate">
-              {{ formatarMoeda(totais.dizimos) }}
-            </p>
+          <div class="text-red-600 text-xl md:text-2xl">
+            <font-awesome-icon icon="arrow-down" />
           </div>
         </div>
       </div>
 
-      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 md:p-4">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <font-awesome-icon 
-              :icon="totais.saldo >= 0 ? 'wallet' : 'exclamation-triangle'" 
-              class="w-4 h-4 md:w-5 md:h-5"
-              :class="totais.saldo >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'"
-            />
+      <!-- Card Dízimos -->
+      <div class="relative bg-gradient-to-br from-card via-purple-950/10 to-card text-card-foreground rounded-lg border border-purple-800/20 shadow-sm hover:shadow-md hover:shadow-purple-500/10 transition-all duration-300 p-4 md:p-6 group overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div class="relative z-10 flex items-center justify-between">
+          <div>
+            <p class="text-xs md:text-sm text-gray-400 mb-1">Dízimos</p>
+            <p class="text-lg md:text-2xl font-bold text-foreground">{{ formatarMoeda(totais.dizimos) }}</p>
+            <p class="text-xs text-purple-600 mt-1">contribuições</p>
           </div>
-          <div class="ml-2 md:ml-3 flex-1 min-w-0">
-            <p class="text-xs md:text-sm font-medium text-blue-900 dark:text-blue-100">Saldo</p>
-            <p class="text-base md:text-lg font-semibold truncate"
-               :class="totais.saldo >= 0 ? 'text-blue-900 dark:text-blue-100' : 'text-red-600 dark:text-red-400'">
+          <div class="text-purple-600 text-xl md:text-2xl">
+            <font-awesome-icon icon="heart" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Card Saldo -->
+      <div class="relative bg-gradient-to-br from-card via-blue-950/10 to-card text-card-foreground rounded-lg border border-blue-800/20 shadow-sm hover:shadow-md hover:shadow-blue-500/10 transition-all duration-300 p-4 md:p-6 group overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div class="relative z-10 flex items-center justify-between">
+          <div>
+            <p class="text-xs md:text-sm text-gray-400 mb-1">Saldo</p>
+            <p class="text-lg md:text-2xl font-bold" :class="totais.saldo >= 0 ? 'text-green-400' : 'text-red-400'">
               {{ formatarMoeda(totais.saldo) }}
             </p>
+            <p class="text-xs text-gray-400 mt-1">{{ relatorios.length }} transações</p>
+          </div>
+          <div :class="totais.saldo >= 0 ? 'text-green-600' : 'text-red-600'" class="text-xl md:text-2xl">
+            <font-awesome-icon :icon="totais.saldo >= 0 ? 'wallet' : 'exclamation-triangle'" />
           </div>
         </div>
       </div>
@@ -143,11 +144,11 @@
     </div>
 
     <!-- Lista de Transações -->
-    <div class="bg-card rounded-lg border border-border overflow-hidden">
+    <div class="bg-card rounded-lg border border-border overflow-hidden transacoes-tabela">
       <div class="p-3 md:p-4 border-b border-border">
         <h3 class="text-base md:text-lg font-semibold text-foreground">Transações Financeiras</h3>
         <p class="text-xs md:text-sm text-muted-foreground mt-1">
-          {{ relatoriosFiltrados.length }} transação(ões) encontrada(s)
+          Mostrando {{ Math.min((paginaAtual - 1) * itensPorPagina + 1, relatoriosFiltrados.length) }}-{{ Math.min(paginaAtual * itensPorPagina, relatoriosFiltrados.length) }} de {{ relatoriosFiltrados.length }} transação(ões)
         </p>
       </div>
 
@@ -175,7 +176,7 @@
               </td>
             </tr>
             
-            <template v-for="relatorio in relatoriosFiltrados" :key="relatorio.id">
+            <template v-for="relatorio in relatoriosPaginados" :key="relatorio.id">
               <!-- Grupo de Despesas Parceladas -->
               <tr v-if="relatorio.isGrupo" class="border-b border-border/50 bg-purple-50/30 dark:bg-purple-900/10 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-colors">
                 <td class="py-3 px-4 text-sm text-foreground">
@@ -288,6 +289,57 @@
         </table>
       </div>
 
+      <!-- Controles de Paginação Desktop -->
+      <div v-if="relatoriosFiltrados.length > itensPorPagina" class="hidden md:flex items-center justify-between px-4 py-3 border-t border-border bg-muted/20">
+        <div class="flex items-center gap-2">
+          <button 
+            @click="paginaAnterior" 
+            :disabled="paginaAtual === 1"
+            class="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            :class="paginaAtual === 1 ? 'text-muted-foreground bg-muted/20' : 'text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary'"
+          >
+            <font-awesome-icon icon="chevron-left" class="w-4 h-4" />
+            <span>Anterior</span>
+          </button>
+          
+          <div class="flex items-center gap-1">
+            <template v-for="pagina in Math.min(totalPaginas, 5)" :key="pagina">
+              <button
+                @click="irParaPagina(pagina)"
+                class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                :class="pagina === paginaAtual 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'text-foreground hover:bg-muted/50'"
+              >
+                {{ pagina }}
+              </button>
+            </template>
+            <span v-if="totalPaginas > 5" class="px-2 text-muted-foreground">...</span>
+            <button
+              v-if="totalPaginas > 5 && paginaAtual !== totalPaginas"
+              @click="irParaPagina(totalPaginas)"
+              class="px-3 py-1.5 rounded-lg text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+            >
+              {{ totalPaginas }}
+            </button>
+          </div>
+          
+          <button 
+            @click="proximaPagina" 
+            :disabled="paginaAtual === totalPaginas"
+            class="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            :class="paginaAtual === totalPaginas ? 'text-muted-foreground bg-muted/20' : 'text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary'"
+          >
+            <span>Próxima</span>
+            <font-awesome-icon icon="chevron-right" class="w-4 h-4" />
+          </button>
+        </div>
+        
+        <div class="text-sm font-medium text-muted-foreground">
+          Página {{ paginaAtual }} de {{ totalPaginas }}
+        </div>
+      </div>
+
       <!-- Vista Mobile: Cards -->
       <div class="md:hidden divide-y divide-border">
         <div v-if="relatoriosFiltrados.length === 0" class="py-8 text-center text-muted-foreground">
@@ -298,43 +350,47 @@
         </div>
         
         <div
-          v-for="relatorio in relatoriosFiltrados"
+          v-for="relatorio in relatoriosPaginados"
           :key="relatorio.id"
           class="transition-colors"
-          :class="relatorio.isGrupo ? 'bg-purple-50/30 dark:bg-purple-900/10' : ''"
         >
           <!-- Card de Grupo Parcelado -->
-          <div v-if="relatorio.isGrupo" class="p-4">
+          <div v-if="relatorio.isGrupo" class="p-4 bg-purple-900/20 rounded-lg border border-purple-700/50">
             <!-- Cabeçalho do Grupo -->
             <div class="flex items-start justify-between mb-3">
-              <div class="flex items-center space-x-2 flex-1">
-                <div class="w-2 h-2 rounded-full" :style="{ backgroundColor: relatorio.categoria_cor }"></div>
-                <span class="text-sm font-medium text-foreground">{{ relatorio.categoria_nome }}</span>
+              <div class="flex items-center gap-3 flex-1">
+                <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+                  <font-awesome-icon icon="credit-card" class="text-white text-base" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <span class="text-sm font-medium text-gray-200 block mb-1">{{ relatorio.categoria_nome }}</span>
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    Parcelada
+                  </span>
+                </div>
               </div>
-              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
-                <font-awesome-icon icon="credit-card" class="w-3 h-3 mr-1" />
-                Parcelada
-              </span>
             </div>
 
             <!-- Descrição e Badge -->
-            <div class="flex items-center gap-2 mb-2">
-              <p class="text-sm text-foreground font-medium flex-1">{{ relatorio.descricao }}</p>
-              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 flex-shrink-0">
-                {{ relatorio.parcelasPagas }}/{{ relatorio.totalParcelas }}
-              </span>
-            </div>
-
-            <!-- Data do Próximo Vencimento -->
-            <div class="flex items-center text-xs text-muted-foreground mb-2">
-              <span v-if="relatorio.proximoVencimento">⏰ Próximo: {{ formatarData(relatorio.proximoVencimento) }}</span>
-              <span v-else>Todas as parcelas pagas</span>
+            <div class="mb-3">
+              <p class="text-base font-semibold text-gray-100 mb-2">{{ relatorio.descricao }}</p>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-500/20 text-orange-300 border border-orange-500/30">
+                  {{ relatorio.parcelasPagas }}/{{ relatorio.totalParcelas }} pagas
+                </span>
+                <span v-if="relatorio.proximoVencimento" class="text-xs text-amber-400 font-medium">
+                  ⏰ Próximo: {{ formatarData(relatorio.proximoVencimento) }}
+                </span>
+                <span v-else class="text-xs text-green-400 font-medium">
+                  ✅ Todas pagas
+                </span>
+              </div>
             </div>
 
             <!-- Valor Total -->
-            <div class="flex items-center justify-between pt-2 border-t border-border/50 mb-2">
-              <span class="text-xs text-muted-foreground">Valor Total:</span>
-              <span class="text-base font-bold text-red-600 dark:text-red-400">
+            <div class="flex items-center justify-between py-2.5 px-3 bg-gray-900/50 rounded-lg border border-gray-700/50 mb-3">
+              <span class="text-xs font-medium text-gray-300">Total Parcelado:</span>
+              <span class="text-lg font-bold text-red-400">
                 {{ formatarMoeda(relatorio.valorTotal) }}
               </span>
             </div>
@@ -342,7 +398,7 @@
             <!-- Botão Expandir/Recolher -->
             <button 
               @click="toggleGrupoExpansao(relatorio.id)"
-              class="w-full mt-2 py-2 px-3 bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-900/40 text-purple-800 dark:text-purple-300 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+              class="w-full py-2.5 px-3 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-semibold shadow-sm"
             >
               <font-awesome-icon 
                 :icon="despesasParceladasExpandidas.has(relatorio.id) ? 'chevron-up' : 'chevron-down'" 
@@ -351,21 +407,21 @@
             </button>
 
             <!-- Parcelas Expandidas (Mobile) -->
-            <div v-if="despesasParceladasExpandidas.has(relatorio.id)" class="mt-3 space-y-2 border-l-2 border-purple-300 dark:border-purple-700 pl-3">
-              <div v-for="parcela in relatorio.parcelas" :key="parcela.id" class="p-3 bg-background border border-border rounded-lg">
+            <div v-if="despesasParceladasExpandidas.has(relatorio.id)" class="mt-3 space-y-2 border-l-3 border-purple-500 pl-3">
+              <div v-for="parcela in relatorio.parcelas" :key="parcela.id" class="p-3 bg-gray-800/50 border border-gray-700/50 rounded-lg">
                 <div class="flex items-start justify-between mb-2">
-                  <p class="text-sm font-medium text-foreground flex-1">{{ parcela.descricao }}</p>
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ml-2"
+                  <p class="text-sm font-semibold text-gray-100 flex-1">{{ parcela.descricao }}</p>
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold flex-shrink-0 ml-2"
                         :class="getStatusClasses(parcela.status_pagamento)">
                     {{ getStatusNome(parcela.status_pagamento) }}
                   </span>
                 </div>
-                <div class="flex items-center justify-between text-xs text-muted-foreground mb-2">
-                  <span>📅 {{ formatarData(parcela.data_vencimento || parcela.data) }}</span>
+                <div class="flex items-center justify-between text-xs text-gray-300 mb-2">
+                  <span class="font-medium">📅 {{ formatarData(parcela.data_vencimento || parcela.data) }}</span>
                 </div>
-                <div class="flex items-center justify-between pt-2 border-t border-border/50">
-                  <span class="text-xs text-muted-foreground">Valor:</span>
-                  <span class="text-sm font-bold" :class="getValorClasses(parcela.tipo)">
+                <div class="flex items-center justify-between pt-2 border-t border-gray-700/50">
+                  <span class="text-xs font-medium text-gray-300">Valor:</span>
+                  <span class="text-base font-bold" :class="getValorClasses(parcela.tipo)">
                     {{ formatarMoeda(parcela.valor) }}
                   </span>
                 </div>
@@ -414,12 +470,47 @@
           </div>
         </div>
       </div>
+
+      <!-- Controles de Paginação Mobile -->
+      <div v-if="relatoriosFiltrados.length > itensPorPagina" class="md:hidden flex flex-col gap-3 p-4 border-t border-border bg-muted/20">
+        <div class="flex items-center justify-between">
+          <button 
+            @click="paginaAnterior" 
+            :disabled="paginaAtual === 1"
+            class="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+            :class="paginaAtual === 1 ? 'text-muted-foreground' : 'text-foreground active:bg-muted/50'"
+          >
+            <font-awesome-icon icon="chevron-left" class="w-4 h-4" />
+            <span>Anterior</span>
+          </button>
+          
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-foreground">{{ paginaAtual }}</span>
+            <span class="text-sm text-muted-foreground">de</span>
+            <span class="text-sm font-medium text-foreground">{{ totalPaginas }}</span>
+          </div>
+          
+          <button 
+            @click="proximaPagina" 
+            :disabled="paginaAtual === totalPaginas"
+            class="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+            :class="paginaAtual === totalPaginas ? 'text-muted-foreground' : 'text-foreground active:bg-muted/50'"
+          >
+            <span>Próxima</span>
+            <font-awesome-icon icon="chevron-right" class="w-4 h-4" />
+          </button>
+        </div>
+        
+        <div class="text-center text-xs text-muted-foreground">
+          Mostrando {{ Math.min((paginaAtual - 1) * itensPorPagina + 1, relatoriosFiltrados.length) }}-{{ Math.min(paginaAtual * itensPorPagina, relatoriosFiltrados.length) }} de {{ relatoriosFiltrados.length }} transações
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRelatorios } from '../composables/useRelatorios'
 
 // Props
@@ -439,6 +530,10 @@ const filtros = ref({
 
 const isExporting = ref(false)
 const despesasParceladasExpandidas = ref<Set<string>>(new Set()) // Para controlar expansão das parcelas
+
+// Paginação
+const paginaAtual = ref(1)
+const itensPorPagina = 12
 
 // Computeds
 const totais = computed(() => {
@@ -555,6 +650,18 @@ const relatoriosFiltrados = computed(() => {
   
   // Agrupar despesas parceladas
   return agruparDespesasParceladas(ordenados)
+})
+
+// Computed para transações paginadas
+const relatoriosPaginados = computed(() => {
+  const inicio = (paginaAtual.value - 1) * itensPorPagina
+  const fim = inicio + itensPorPagina
+  return relatoriosFiltrados.value.slice(inicio, fim)
+})
+
+// Computed para total de páginas
+const totalPaginas = computed(() => {
+  return Math.ceil(relatoriosFiltrados.value.length / itensPorPagina)
 })
 
 // Métodos
@@ -1169,4 +1276,33 @@ const toggleGrupoExpansao = (grupoId: string) => {
     despesasParceladasExpandidas.value.add(grupoId)
   }
 }
+
+// Funções de paginação
+const irParaPagina = (pagina: number) => {
+  if (pagina >= 1 && pagina <= totalPaginas.value) {
+    paginaAtual.value = pagina
+    // Scroll suave para o topo da tabela
+    const tabela = document.querySelector('.transacoes-tabela')
+    if (tabela) {
+      tabela.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+}
+
+const proximaPagina = () => {
+  if (paginaAtual.value < totalPaginas.value) {
+    irParaPagina(paginaAtual.value + 1)
+  }
+}
+
+const paginaAnterior = () => {
+  if (paginaAtual.value > 1) {
+    irParaPagina(paginaAtual.value - 1)
+  }
+}
+
+// Resetar página quando filtros mudarem
+watch(filtros, () => {
+  paginaAtual.value = 1
+}, { deep: true })
 </script>

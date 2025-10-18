@@ -36,7 +36,10 @@ export function useFinancas() {
     
     const totalDizimo = transacoes.value
       .filter(t => t.tipo === 'dizimo')
-      .reduce((sum, t) => sum + t.valor, 0)
+      .reduce((sum, t) => {
+        console.log('💰 Calculando dízimo:', t.descricao, t.valor)
+        return sum + t.valor
+      }, 0)
     
     const transacoesHoje = transacoes.value
       .filter(t => t.data === hoje).length
@@ -123,7 +126,15 @@ export function useFinancas() {
       
       if (error) throw error
       
-      transacoes.value = data || []
+      // Forçar reatividade com spread operator
+      transacoes.value = [...(data || [])]
+      
+      const totalDizimos = transacoes.value.filter(t => t.tipo === 'dizimo').reduce((sum, t) => sum + t.valor, 0)
+      console.log('🔄 Transações atualizadas:', {
+        total: transacoes.value.length,
+        dizimos: transacoes.value.filter(t => t.tipo === 'dizimo').length,
+        totalDizimo: totalDizimos
+      })
       return data
     } catch (err: any) {
       errorMessage.value = err.message
@@ -328,6 +339,10 @@ export function useFinancas() {
       clearError()
       isLoading.value = true
       
+      // Buscar a transação original para verificar se é uma entrada
+      const transacaoOriginal = transacoes.value.find(t => t.id === id)
+      
+      // Atualizar a transação principal
       const { data, error } = await supabase
         .from('transacoes_financeiras')
         .update(updates)
@@ -338,6 +353,54 @@ export function useFinancas() {
         `)
       
       if (error) throw error
+      
+      // Se for uma entrada e o valor mudou, atualizar o dízimo vinculado
+      if (transacaoOriginal?.tipo === 'entrada' && updates.valor && updates.valor !== transacaoOriginal.valor) {
+        const novoValorDizimo = updates.valor * 0.1
+        
+        console.log('🔄 Atualizando dízimo vinculado:', {
+          entradaId: id,
+          valorAnterior: transacaoOriginal.valor,
+          novoValor: updates.valor,
+          novoDizimo: novoValorDizimo
+        })
+        
+        // Atualizar o dízimo vinculado a esta entrada
+        const { data: dizimoData, error: dizimoError } = await supabase
+          .from('transacoes_financeiras')
+          .update({ 
+            valor: novoValorDizimo,
+            descricao: `Dízimo - ${updates.descricao || transacaoOriginal.descricao}` 
+          })
+          .eq('transacao_origem_id', id)
+          .eq('tipo', 'dizimo')
+          .select(`
+            *,
+            categoria:categorias_financeiras(nome, cor, icone)
+          `)
+        
+        if (dizimoError) {
+          console.error('❌ Erro ao atualizar dízimo:', dizimoError)
+        } else {
+          console.log('✅ Dízimo atualizado com sucesso', dizimoData)
+          
+          // Atualizar também na lista local com os dados retornados
+          if (dizimoData && dizimoData[0]) {
+            const dizimoIndex = transacoes.value.findIndex(
+              t => t.transacao_origem_id === id && t.tipo === 'dizimo'
+            )
+            if (dizimoIndex !== -1) {
+              transacoes.value[dizimoIndex] = dizimoData[0]
+            }
+          }
+        }
+        
+        // Atualizar valor_dizimo na entrada
+        await supabase
+          .from('transacoes_financeiras')
+          .update({ valor_dizimo: novoValorDizimo })
+          .eq('id', id)
+      }
       
       if (data && data[0]) {
         const index = transacoes.value.findIndex(t => t.id === id)
