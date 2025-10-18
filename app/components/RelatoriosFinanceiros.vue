@@ -103,7 +103,7 @@
 
     <!-- Filtros -->
     <div class="bg-card rounded-lg border border-border p-3 md:p-4">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <div>
           <label class="block text-xs md:text-sm font-medium text-foreground mb-1 md:mb-2">Data Inicial</label>
           <input
@@ -120,7 +120,7 @@
             class="w-full px-2 md:px-3 py-2 text-sm md:text-base border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
-        <div class="sm:col-span-2 lg:col-span-1">
+        <div>
           <label class="block text-xs md:text-sm font-medium text-foreground mb-1 md:mb-2">Tipo</label>
           <select
             v-model="filtros.tipo"
@@ -131,6 +131,15 @@
             <option value="saida">Saídas</option>
             <option value="dizimo">Dízimos</option>
           </select>
+        </div>
+        <div>
+          <label class="block text-xs md:text-sm font-medium text-foreground mb-1 md:mb-2">Descrição</label>
+          <input
+            v-model="filtros.descricao"
+            type="text"
+            placeholder="Buscar por descrição..."
+            class="w-full px-2 md:px-3 py-2 text-sm md:text-base border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          />
         </div>
       </div>
       <div class="flex justify-end mt-3 md:mt-4">
@@ -525,7 +534,8 @@ const { calcularTotais } = useRelatorios()
 const filtros = ref({
   dataInicial: '',
   dataFinal: '',
-  tipo: ''
+  tipo: '',
+  descricao: ''
 })
 
 const isExporting = ref(false)
@@ -643,6 +653,15 @@ const relatoriosFiltrados = computed(() => {
 
   if (filtros.value.dataFinal) {
     filtrados = filtrados.filter(r => r.data <= filtros.value.dataFinal)
+  }
+
+  // Filtro por descrição
+  if (filtros.value.descricao) {
+    const buscaLower = filtros.value.descricao.toLowerCase()
+    filtrados = filtrados.filter(r => 
+      r.descricao?.toLowerCase().includes(buscaLower) ||
+      r.categoria_nome?.toLowerCase().includes(buscaLower)
+    )
   }
 
   // Ordenar por data
@@ -1264,7 +1283,8 @@ const limparFiltros = () => {
   filtros.value = {
     dataInicial: '',
     dataFinal: '',
-    tipo: ''
+    tipo: '',
+    descricao: ''
   }
 }
 

@@ -6,6 +6,15 @@
   html, body, #__nuxt {
     height: 100%;
   }
+
+  /* Ícones do calendário brancos no modo escuro */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0) brightness(1);
+  }
+
+  .dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(2);
+  }
 }
 
 
