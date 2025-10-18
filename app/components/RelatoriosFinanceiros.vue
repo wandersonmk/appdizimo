@@ -556,7 +556,9 @@ const totais = computed(() => {
   }
 
   relatoriosFiltrados.value.forEach(relatorio => {
-    const valor = relatorio.valor || 0
+    // Se for um grupo, usar o valorTotal do grupo
+    // Se for uma transação normal, usar o valor da transação
+    const valor = relatorio.isGrupo ? (relatorio.valorTotal || 0) : (relatorio.valor || 0)
     
     switch (relatorio.tipo) {
       case 'entrada':
@@ -646,13 +648,22 @@ const relatoriosFiltrados = computed(() => {
     filtrados = filtrados.filter(r => r.tipo === filtros.value.tipo)
   }
 
-  // Filtro por data
+  // Filtro por data inicial - normalizar para YYYY-MM-DD
   if (filtros.value.dataInicial) {
-    filtrados = filtrados.filter(r => r.data >= filtros.value.dataInicial)
+    const dataInicialNormalizada = filtros.value.dataInicial
+    filtrados = filtrados.filter(r => {
+      const dataTransacao = r.data
+      return dataTransacao >= dataInicialNormalizada
+    })
   }
 
+  // Filtro por data final - normalizar para YYYY-MM-DD
   if (filtros.value.dataFinal) {
-    filtrados = filtrados.filter(r => r.data <= filtros.value.dataFinal)
+    const dataFinalNormalizada = filtros.value.dataFinal
+    filtrados = filtrados.filter(r => {
+      const dataTransacao = r.data
+      return dataTransacao <= dataFinalNormalizada
+    })
   }
 
   // Filtro por descrição

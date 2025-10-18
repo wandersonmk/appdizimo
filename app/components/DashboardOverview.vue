@@ -124,12 +124,8 @@ const fetchMetrics = async () => {
   loading.value = true
   
   try {
-    console.log('🔄 Buscando métricas do usuário logado...')
-
     // Buscar todas as transações do usuário
     await fetchTransacoes()
-    
-    console.log('📊 Transações carregadas:', transacoes.value.length)
 
     // Calcular métricas baseadas nas transações do usuário logado
     const hoje = new Date().toISOString().split('T')[0]
@@ -172,8 +168,6 @@ const fetchMetrics = async () => {
       dizimoMensal: dizimoMensalTotal
     }
     
-    console.log('✅ Métricas calculadas:', metrics.value)
-
   } catch (error) {
     console.error('❌ Erro ao carregar métricas:', error)
   } finally {
@@ -188,18 +182,19 @@ const createLineChart = async () => {
   const ctx = lineChartRef.value.getContext('2d')
   if (!ctx) return
 
-  // Dados padrão
-  let labels = ['Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out']
-  let entradasData = [0, 0, 0, 0, 0, 0]
-  let saidasData = [0, 0, 0, 0, 0, 0]
+  // Dados padrão para 12 meses
+  let labels = ['Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez', 'Jan', 'Fev', 'Mar', 'Abr']
+  let entradasData = Array(12).fill(0)
+  let saidasData = Array(12).fill(0)
 
   try {
-    // Obter últimos 6 meses
+    // Obter últimos 6 meses + próximos 6 meses (12 meses no total)
     const meses = []
     const labelsCalculados = []
     const hoje = new Date()
     
-    for (let i = 5; i >= 0; i--) {
+    // 6 meses anteriores + mês atual + 5 meses futuros = 12 meses
+    for (let i = 5; i >= -6; i--) {
       const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1)
       const mesAno = data.toISOString().slice(0, 7)
       const nomeAbrev = data.toLocaleDateString('pt-BR', { month: 'short' })
@@ -219,11 +214,12 @@ const createLineChart = async () => {
       saidasData = meses.map(mes => {
         return transacoes.value
           .filter(t => t.tipo === 'saida' && t.data && t.data.startsWith(mes))
-          .reduce((sum: number, t: any) => sum + parseFloat(t.valor || 0), 0)
+          .reduce((sum: number, t: any) => {
+            const valor = typeof t.valor === 'number' ? t.valor : parseFloat(String(t.valor || 0))
+            return sum + valor
+          }, 0)
       })
     }
-    
-    console.log('📊 Dados do gráfico:', { labels, entradasData, saidasData })
   } catch (error) {
     console.error('❌ Erro ao processar dados:', error)
   }
