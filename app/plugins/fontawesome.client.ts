@@ -48,7 +48,10 @@ import {
   faInbox,
   faHeart,
   faBriefcase,
-  faEdit
+  faEdit,
+  faLaptop,
+  faChartLine,
+  faPlusCircle
 } from '@fortawesome/free-solid-svg-icons'
 
 // This is important, we are going to let Nuxt worry about the CSS
@@ -104,7 +107,10 @@ library.add(
   faInbox,
   faHeart,
   faBriefcase,
-  faEdit
+  faEdit,
+  faLaptop,
+  faChartLine,
+  faPlusCircle
 )
 
 export default defineNuxtPlugin((nuxtApp) => {
