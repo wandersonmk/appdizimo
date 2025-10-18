@@ -30,45 +30,45 @@
     </div>
 
     <!-- Filtros -->
-    <div class="p-6 border-b border-border bg-muted/30">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="p-3 md:p-6 border-b border-border bg-muted/30">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <!-- Filtro por Data Inicial -->
         <div>
-          <label class="block text-sm font-medium text-foreground mb-2">Data Inicial</label>
+          <label class="block text-xs md:text-sm font-medium text-foreground mb-1 md:mb-2">Data Início</label>
           <input
             v-model="filtros.dataInicial"
             type="date"
-            class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary date-input-white-icon"
+            class="w-full px-2 md:px-3 py-2 text-sm md:text-base border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
         <!-- Filtro por Data Final -->
         <div>
-          <label class="block text-sm font-medium text-foreground mb-2">Data Final</label>
+          <label class="block text-xs md:text-sm font-medium text-foreground mb-1 md:mb-2">Data Fim</label>
           <input
             v-model="filtros.dataFinal"
             type="date"
-            class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary date-input-white-icon"
+            class="w-full px-2 md:px-3 py-2 text-sm md:text-base border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
         <!-- Filtro por CNPJ/Nome da Loja -->
         <div>
-          <label class="block text-sm font-medium text-foreground mb-2">CNPJ ou Nome da Loja</label>
+          <label class="block text-xs md:text-sm font-medium text-foreground mb-1 md:mb-2">CNPJ ou Loja</label>
           <input
             v-model="filtros.lojaOuCnpj"
             type="text"
-            placeholder="Digite CNPJ ou nome da loja"
-            class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            placeholder="Digite CNPJ ou nome..."
+            class="w-full px-2 md:px-3 py-2 text-sm md:text-base border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
         <!-- Filtro por Empresa/Operadora -->
         <div>
-          <label class="block text-sm font-medium text-foreground mb-2">Empresa</label>
+          <label class="block text-xs md:text-sm font-medium text-foreground mb-1 md:mb-2">Empresa</label>
           <select
             v-model="filtros.empresa"
-            class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            class="w-full px-2 md:px-3 py-2 text-sm md:text-base border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">Todas as empresas</option>
             <option value="Vivo">Vivo</option>
